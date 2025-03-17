@@ -35,7 +35,6 @@
             });
         },
 
-        // Поиск изображений на Unsplash по ключевым словам
         searchUnsplash: function(query) {
             $.ajax({
                 url: wp_json_importer.ajax_url,
@@ -76,8 +75,7 @@
 
             let html = '';
 
-            // Добавляем заголовок для группы изображений
-            html += `<div class="images-group-title">Изображения по запросу "${query}":</div>`;
+
 
             $.each(images, function(index, image) {
                 html += `

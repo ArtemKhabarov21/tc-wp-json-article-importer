@@ -13,37 +13,57 @@
         },
 
         // Инициализация или обновление TinyMCE
+        // Инициализация или обновление TinyMCE
         initOrUpdate: function(content) {
             if (typeof tinyMCE === 'undefined' || typeof wp === 'undefined' || !wp.editor) {
                 console.error('TinyMCE или wp.editor не доступны');
                 return;
             }
 
-            // Сохраняем содержимое редактора, если он уже был инициализирован
-            if (WPJAI.data.editorInitialized && tinyMCE.get('article-content-editor')) {
-                WPJAI.data.lastEditorContent = tinyMCE.get('article-content-editor').getContent();
-                tinyMCE.remove('#article-content-editor');
+            // Сначала проверяем, инициализирован ли уже редактор
+            var isTinyMCEActive = typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor &&
+                tinyMCE.activeEditor.id === 'article-content-editor';
+
+            var isQuickTagsActive = typeof QTags !== 'undefined' &&
+                QTags.instances['article-content-editor'];
+
+            // Если редактор уже существует, сохраняем его содержимое и удаляем
+            if (isTinyMCEActive || isQuickTagsActive) {
+                if (isTinyMCEActive) {
+                    WPJAI.data.lastEditorContent = tinyMCE.get('article-content-editor').getContent();
+                    tinyMCE.execCommand('mceRemoveEditor', false, 'article-content-editor');
+                }
+
+                if (isQuickTagsActive) {
+                    // Удаляем экземпляр QTags
+                    for (var i = 0; i < QTags.instances.length; i++) {
+                        if (QTags.instances[i].id === 'article-content-editor') {
+                            QTags.instances.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+
+                // Удаляем поле ввода, чтобы избежать дублирования кнопок медиа
+                $('#article-content-editor').parents('.wp-editor-wrap').remove();
             }
 
             // Если контент не передан, используем сохраненное содержимое
             content = content || WPJAI.data.lastEditorContent;
 
-            // Проверяем наличие текстового поля
-            if ($('#article-content-editor').length === 0) {
-                $('.article-preview').html('<textarea id="article-content-editor" style="width:100%; height:500px;"></textarea>');
-            }
+            // Создаем новый textarea для редактора
+            $('.article-preview').html('<textarea id="article-content-editor" style="width:100%; height:500px;"></textarea>');
 
             // Устанавливаем содержимое в текстовое поле
             $('#article-content-editor').val(content);
 
-            // Инициализируем TinyMCE
+            // Инициализируем TinyMCE с минимальной конфигурацией
             wp.editor.initialize('article-content-editor', {
                 tinymce: {
                     wpautop: true,
-                    plugins: 'paste,lists,link,image,media,wordpress,wplink,fullscreen,textcolor,table,hr,charmap',
+                    plugins: 'paste,lists,link,image,media,wordpress,wplink,fullscreen,textcolor,hr,charmap',
                     toolbar1: 'formatselect,bold,italic,underline,strikethrough,bullist,numlist,blockquote,alignleft,aligncenter,alignright,link,unlink,wp_adv',
-                    toolbar2: 'fullscreen,pastetext,forecolor,backcolor,table,hr,removeformat,charmap,outdent,indent,undo,redo,wp_help',
-                    contextmenu: 'link image inserttable | cell row column deletetable',
+                    toolbar2: 'fullscreen,pastetext,forecolor,backcolor,hr,removeformat,charmap,outdent,indent,undo,redo,wp_help',
                     relative_urls: false,
                     convert_urls: false,
                     setup: function(editor) {
@@ -61,19 +81,6 @@
                                     // Это не JSON данные, пропускаем
                                 }
                             }
-                        });
-
-                        // Добавляем контекстное меню для быстрого доступа к изображениям
-                        editor.on('contextmenu', function(e) {
-                            // Предотвращаем стандартное контекстное меню
-                            if (e.target.nodeName === 'IMG') {
-                                return; // Позволяем стандартное меню для существующих изображений
-                            }
-
-                            e.preventDefault();
-                            // Показываем нашу панель выбора изображений
-                            WPJAI.Images.showContextMenu(e.clientX, e.clientY, editor);
-                            return false;
                         });
                     }
                 },

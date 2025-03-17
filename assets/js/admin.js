@@ -24,7 +24,7 @@
                 WPJAI.Articles.init();
                 WPJAI.Images.init();
                 WPJAI.Publish.init();
-                WPJAI.Settings.init();
+                //WPJAI.Settings.init();
 
                 // Инициализация вкладок
                 WPJAI.initTabs();

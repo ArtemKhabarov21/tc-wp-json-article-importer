@@ -130,53 +130,14 @@ wp_enqueue_editor();
 
 <script>
     jQuery(document).ready(function($) {
-        // Инициализация TinyMCE после загрузки статьи
-        function initTinyMCE() {
-            if (typeof tinyMCE !== 'undefined') {
-                // Проверяем существует ли уже экземпляр редактора
-                if (tinyMCE.get('article-content-editor')) {
-                    tinyMCE.remove('#article-content-editor');
-                }
+        // Удаляем прямую инициализацию TinyMCE здесь - она будет происходить через WPJAI.Editor.initOrUpdate
+        // когда загрузится статья
 
-                // Добавляем скрытый textarea для инициализации TinyMCE
-                if ($('#article-content-editor').length === 0) {
-                    $('.article-preview').append('<textarea id="article-content-editor" style="width:100%; height:500px;"></textarea>');
-                }
-
-                // Инициализируем TinyMCE с нужными настройками
-                wp.editor.initialize('article-content-editor', {
-                    tinymce: {
-                        wpautop: true,
-                        plugins: 'paste,lists,link,image,media,wordpress,wplink,fullscreen',
-                        toolbar1: 'formatselect,bold,italic,bullist,numlist,blockquote,alignleft,aligncenter,alignright,link,wp_adv',
-                        toolbar2: 'fullscreen,pastetext,pasteword,removeformat,charmap,outdent,indent,undo,redo,wp_help',
-                        setup: function(editor) {
-                            // Добавляем обработчик для перетаскивания изображений
-                            editor.on('drop', function(e) {
-                                var dataTransfer = e.dataTransfer;
-                                if (dataTransfer && dataTransfer.getData('text')) {
-                                    try {
-                                        var imageData = JSON.parse(dataTransfer.getData('text'));
-                                        if (imageData.url) {
-                                            e.preventDefault();
-                                            editor.insertContent('<img src="' + imageData.url + '" alt="' + (imageData.alt || '') + '" />');
-                                        }
-                                    } catch (ex) {
-                                        // Это не JSON данные, пропускаем
-                                    }
-                                }
-                            });
-                        }
-                    },
-                    quicktags: true,
-                    mediaButtons: true
-                });
-            }
-        }
-
-        // После успешной загрузки статьи инициализируем TinyMCE
+        // Вместо этого просто следим за событием загрузки статьи
         $(document).on('article_loaded', function() {
-            initTinyMCE();
+            // Эта функция будет вызвана после загрузки статьи
+            // Вся инициализация редактора происходит в WPJAI.Editor.initOrUpdate
+            console.log('Статья загружена и редактор инициализирован');
         });
     });
 </script>

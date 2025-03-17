@@ -39,6 +39,7 @@
         },
 
         // Функция публикации статьи
+        // Функция публикации статьи
         publishArticle: function() {
             const postStatus = $('#post-status').val();
             const postType = $('#post-type').val();
@@ -60,6 +61,9 @@
                 WPJAI.Utils.showNotice('error', 'Контент статьи не может быть пустым.');
                 return;
             }
+
+            // Удаляем любые проблемные теги из контента
+            contentHtml = contentHtml.replace(/<userStyle>.*?<\/userStyle>/g, '');
 
             $('#publish-article').prop('disabled', true).text('Публикация...');
             WPJAI.Utils.showNotice('info', 'Создание публикации...');
@@ -112,9 +116,10 @@
                                 WPJAI.Utils.showNotice('error', `Ошибка: ${response.data}`);
                             }
                         },
-                        error: function() {
+                        error: function(jqXHR, textStatus, errorThrown) {
                             $('#publish-article').prop('disabled', false).text('Опубликовать');
-                            WPJAI.Utils.showNotice('error', 'Произошла ошибка при создании публикации.');
+                            console.error('AJAX error:', textStatus, errorThrown, jqXHR.responseText);
+                            WPJAI.Utils.showNotice('error', 'Произошла ошибка при создании публикации: ' + errorThrown);
                         }
                     });
                 })

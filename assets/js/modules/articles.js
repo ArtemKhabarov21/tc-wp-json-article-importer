@@ -106,7 +106,6 @@
                             WPJAI.data.articles = response.data.count;
                             WPJAI.data.currentArticleIndex = 0;
 
-                            // Показываем навигацию и первую статью
                             $('.article-navigation').show();
                             $('#article-counter').text(`Статья 1 из ${WPJAI.data.articles}`);
 
@@ -129,10 +128,8 @@
             }
         },
 
-        // Переключение на предыдущую статью
         prevArticle: function() {
             if (WPJAI.data.currentArticleIndex > 0) {
-                // Сохраняем текущее содержимое редактора
                 WPJAI.data.lastEditorContent = WPJAI.Editor.getContent();
 
                 WPJAI.data.currentArticleIndex--;
@@ -140,7 +137,6 @@
             }
         },
 
-        // Переключение на следующую статью
         nextArticle: function() {
             if (WPJAI.data.currentArticleIndex < WPJAI.data.articles - 1) {
                 // Сохраняем текущее содержимое редактора
@@ -151,7 +147,6 @@
             }
         },
 
-        // Загрузка статьи по индексу
         loadArticle: function(index) {
             $.ajax({
                 url: wp_json_importer.ajax_url,
@@ -184,7 +179,7 @@
             });
         },
 
-        // Отображение статьи в превью
+
         displayArticle: function(article) {
             if (!article) {
                 $('.article-preview').html('<div class="no-article"><p>Статья не найдена</p></div>');
@@ -194,21 +189,26 @@
             // Подготавливаем контент для редактора
             let content = article.content || '';
 
+            // Удаляем любые потенциальные теги стилей или другие нежелательные теги
+            content = content.replace(/<userStyle>.*?<\/userStyle>/g, '');
+
             // Добавляем мета-информацию в начало
             if (article.meta) {
                 const metaInfo = `
-                    <div class="meta-info">
-                        <p><strong>META Title:</strong> ${article.meta.title || ''}</p>
-                        <p><strong>META Description:</strong> ${article.meta.description || ''}</p>
-                    </div>
-                `;
+            <div class="meta-info">
+                <p><strong>META Title:</strong> ${article.meta.title || ''}</p>
+                <p><strong>META Description:</strong> ${article.meta.description || ''}</p>
+            </div>
+        `;
                 content = `<h1>${article.h1 || 'Без заголовка'}</h1>${metaInfo}${content}`;
             } else {
                 content = `<h1>${article.h1 || 'Без заголовка'}</h1>${content}`;
             }
 
-            // Инициализируем или обновляем редактор TinyMCE
-            WPJAI.Editor.initOrUpdate(content);
+
+            setTimeout(function() {
+                WPJAI.Editor.initOrUpdate(content);
+            }, 100);
 
             // Очищаем результаты предыдущего поиска изображений
             $('#unsplash-results').empty();
