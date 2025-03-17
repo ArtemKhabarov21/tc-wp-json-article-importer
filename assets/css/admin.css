@@ -330,3 +330,133 @@
         margin-bottom: 5px;
     }
 }
+
+/* Стили для модального окна вставки изображений */
+.image-insert-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-insert-modal .modal-content {
+    background-color: #fefefe;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.image-insert-modal .close-modal {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.image-insert-modal .close-modal:hover {
+    color: #000;
+}
+
+.modal-image-selection {
+    margin-bottom: 20px;
+}
+
+.modal-image-selection .image-results {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.image-settings {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.setting-group {
+    margin-bottom: 15px;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.alignment-options {
+    display: flex;
+    justify-content: space-between;
+}
+
+.alignment-btn {
+    flex: 1;
+    margin: 0 5px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.alignment-btn.selected, .alignment-btn:hover {
+    background-color: #e0e0e0;
+}
+
+#insert-selected-image {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.image-item.selected {
+    border: 3px solid #0073a1;
+}
+
+/* Стили для размещения изображений */
+.wp-block-image.alignleft {
+    float: left;
+    margin-right: 1em;
+    margin-bottom: 1em;
+}
+
+.wp-block-image.alignright {
+    float: right;
+    margin-left: 1em;
+    margin-bottom: 1em;
+}
+
+.wp-block-image.aligncenter {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.wp-block-image.size-small img {
+    max-width: 25%;
+}
+
+.wp-block-image.size-medium img {
+    max-width: 50%;
+}
+
+.wp-block-image.size-large img {
+    max-width: 75%;
+}
+
+.wp-block-image.size-full img {
+    max-width: 100%;
+}

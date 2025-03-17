@@ -42,12 +42,9 @@
 
                         <div class="image-search">
                             <input type="text" id="unsplash-search" placeholder="Поиск изображений...">
-                            <button id="search-unsplash" class="button">Поиск</button>
                         </div>
 
-                        <div class="drag-instruction">
-                            <p>Перетащите изображение в нужное место в статье</p>
-                        </div>
+
 
                         <div id="keywords-tags" class="keywords-tags"></div>
 

@@ -47,7 +47,6 @@ class WPJAI_Core {
         $posts = new WPJAI_Posts();
         $posts->init();
 
-        // Регистрация хуков активации и деактивации
         register_activation_hook(WPJAI_PLUGIN_DIR . 'wp-json-article-importer.php', array($this, 'activate'));
         register_deactivation_hook(WPJAI_PLUGIN_DIR . 'wp-json-article-importer.php', array($this, 'deactivate'));
     }
@@ -58,7 +57,7 @@ class WPJAI_Core {
     private function load_settings() {
         $this->settings = get_option('wp_json_article_importer_settings', array(
             'json_file_url' => '',
-            'api_keys' => 'VKikqorzQ57Wt305oVCfGvi-KIWFKfvo2cDW7-pPY_M', // Значение по умолчанию
+            'api_keys' => 'VKikqorzQ57Wt305oVCfGvi-KIWFKfvo2cDW7-pPY_M',
         ));
     }
 

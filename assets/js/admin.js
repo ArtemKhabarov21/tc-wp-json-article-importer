@@ -1,4 +1,124 @@
 jQuery(document).ready(function($) {
+
+
+    $('.article-preview').on('click', function(e) {
+        // Проверяем, что клик не по изображению
+        if ($(e.target).is('img')) return;
+
+        // Открываем модальное окно с выбором изображений
+        openImageSelectionModal(e.target);
+    });
+
+    function openImageSelectionModal(targetElement) {
+        // Создаем модальное окно
+        const modal = $(`
+            <div id="image-insert-modal" class="image-insert-modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>Выбор и настройка изображения</h2>
+                    
+                    <div class="modal-image-selection">
+                        <div id="modal-unsplash-results" class="image-results">
+                            ${$('#unsplash-results').html()}
+                        </div>
+                    </div>
+
+                    <div class="image-settings">
+                        <h3>Настройки изображения</h3>
+                        <div class="setting-group">
+                            <label>Размер:</label>
+                            <select id="image-size">
+                                <option value="small">Малый</option>
+                                <option value="medium" selected>Средний</option>
+                                <option value="large">Большой</option>
+                                <option value="full">Во весь текст</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-group">
+                            <label>Позиционирование:</label>
+                            <div class="alignment-options">
+                                <button class="alignment-btn" data-align="left">Слева</button>
+                                <button class="alignment-btn" data-align="center" selected>По центру</button>
+                                <button class="alignment-btn" data-align="right">Справа</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="insert-selected-image" class="button button-primary">Вставить изображение</button>
+                </div>
+            </div>
+        `).appendTo('body');
+
+        // Инициализируем draggable для изображений в модальном окне
+        initDraggableImages();
+
+        // Обработчик закрытия модального окна
+        $('.close-modal, #image-insert-modal').on('click', function(e) {
+            if (e.target === this || $(e.target).hasClass('close-modal')) {
+                modal.remove();
+            }
+        });
+
+        // Останавливаем всплытие событий внутри контента модального окна
+        $('.modal-content').on('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Обработчик выбора изображения
+        let selectedImage = null;
+        $('.image-item img').on('click', function() {
+            $('.image-item').removeClass('selected');
+            $(this).closest('.image-item').addClass('selected');
+
+            selectedImage = {
+                id: $(this).data('id'),
+                url: $(this).data('url'),
+                alt: $(this).data('alt')
+            };
+        });
+
+        // Обработчик выбора размера и позиционирования
+        let imageSize = 'medium';
+        let imageAlign = 'center';
+
+        $('#image-size').on('change', function() {
+            imageSize = $(this).val();
+        });
+
+        $('.alignment-btn').on('click', function() {
+            $('.alignment-btn').removeClass('selected');
+            $(this).addClass('selected');
+            imageAlign = $(this).data('align');
+        });
+
+        // Вставка изображения
+        $('#insert-selected-image').on('click', function() {
+            if (!selectedImage) {
+                alert('Пожалуйста, выберите изображение');
+                return;
+            }
+
+            const imageHtml = `
+                <figure class="wp-block-image size-${imageSize} align${imageAlign}">
+                    <img src="${selectedImage.url}" alt="${selectedImage.alt}" 
+                         class="wp-image-${selectedImage.id}" 
+                         data-image-id="${selectedImage.id}">
+                </figure>
+            `;
+
+            // Вставляем изображение рядом с целевым элементом
+            $(targetElement).after(imageHtml);
+
+            // Закрываем модальное окно
+            modal.remove();
+
+            // Сохраняем выбранное изображение
+            if (!selectedImages[selectedImage.id]) {
+                selectedImages[selectedImage.id] = selectedImage;
+            }
+        });
+    }
     // Переменные для хранения данных
     let articles = [];
     let currentArticleIndex = 0;
@@ -219,17 +339,17 @@ jQuery(document).ready(function($) {
 
         // Получаем выбранные изображения
         const imagesToPublish = [];
-        $.each(selectedImages, function(index, imageData) {
-            imagesToPublish.push({
-                id: imageData.id,
-                url: imageData.url,
-                full: imageData.full,
-                alt: imageData.alt || 'Изображение'
-            });
-        });
+        const allImages = $('.article-preview img[data-image-id]');
 
-        // Получаем HTML-содержимое статьи с вставленными изображениями
-        const contentHtml = $('.article-preview').html();
+        allImages.each(function() {
+            const $img = $(this);
+            const imageData = {
+                id: $img.data('image-id'),
+                url: $img.attr('src'),
+                alt: $img.attr('alt') || 'Изображение'
+            };
+            imagesToPublish.push(imageData);
+        });
 
         $.ajax({
             url: wp_json_importer.ajax_url,
@@ -240,8 +360,7 @@ jQuery(document).ready(function($) {
                 article_index: currentArticleIndex,
                 post_status: postStatus,
                 schedule_date: scheduleDate,
-                images: imagesToPublish,
-                content: contentHtml
+                images: imagesToPublish
             },
             beforeSend: function() {
                 $('#publish-article').prop('disabled', true).text('Публикация...');
@@ -262,9 +381,10 @@ jQuery(document).ready(function($) {
                     showNotice('error', `Ошибка: ${response.data}`);
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
                 $('#publish-article').prop('disabled', false).text('Опубликовать');
-                showNotice('error', 'Произошла ошибка при создании поста.');
+                console.error('Ошибка:', error);
+                showNotice('error', 'Произошла ошибка при создании поста. Проверьте консоль разработчика.');
             }
         });
     });
