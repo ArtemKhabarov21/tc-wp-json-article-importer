@@ -23,8 +23,10 @@ class WPJAI_Posts {
         // Получение данных
         $article_index = isset($_POST['article_index']) ? intval($_POST['article_index']) : 0;
         $post_status = isset($_POST['post_status']) ? sanitize_text_field($_POST['post_status']) : 'draft';
+        $post_type = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : 'post';
+        $category_id = isset($_POST['category_id']) ? intval($_POST['category_id']) : 0;
         $schedule_date = isset($_POST['schedule_date']) ? sanitize_text_field($_POST['schedule_date']) : '';
-        $selected_images = isset($_POST['images']) ? (array)$_POST['images'] : array();
+        $content_html = isset($_POST['content_html']) ? wp_kses_post($_POST['content_html']) : '';
 
         // Получение кэшированных статей
         $articles = get_transient('wp_json_article_importer_articles');
@@ -35,37 +37,18 @@ class WPJAI_Posts {
 
         $article = $articles[$article_index];
 
-        // Загрузка и прикрепление изображений
-        $images_with_attachments = array();
-        $featured_image_id = 0;
+        // Обработка контента с изображениями через прокси-функцию
+        $content_with_images = $this->process_content_images($content_html);
 
-        if (!empty($selected_images)) {
-            foreach ($selected_images as $image_data) {
-                // Проверяем, что урл изображения не пустой
-                if (empty($image_data['url'])) continue;
-
-                $image_id = $this->upload_image_from_url($image_data['url'], 0,
-                    !empty($image_data['alt']) ? $image_data['alt'] : '');
-
-                if (!is_wp_error($image_id) && $image_id > 0) {
-                    // Первое изображение станет миниатюрой
-                    if ($featured_image_id === 0) {
-                        $featured_image_id = $image_id;
-                    }
-
-                    // Добавляем ID вложения к данным изображения
-                    $image_data['attachment_id'] = $image_id;
-                    $images_with_attachments[] = $image_data;
-                }
-            }
-        }
+        // Устанавливаем миниатюру поста из первого изображения (если есть)
+        $featured_image_id = $this->extract_first_image_id($content_with_images);
 
         // Создаем пост
         $post_data = array(
             'post_title'    => sanitize_text_field($article['h1']),
-            'post_content'  => $this->create_gutenberg_content($article, $images_with_attachments, $selected_images),
+            'post_content'  => $content_with_images,
             'post_status'   => $post_status,
-            'post_type'     => 'post'
+            'post_type'     => $post_type
         );
 
         // Обработка отложенной публикации
@@ -87,6 +70,11 @@ class WPJAI_Posts {
             set_post_thumbnail($post_id, $featured_image_id);
         }
 
+        // Привязка к категории для типа 'post'
+        if ($post_type === 'post' && $category_id > 0) {
+            wp_set_post_categories($post_id, array($category_id));
+        }
+
         // Добавляем мета-информацию
         update_post_meta($post_id, '_meta_title',
             !empty($article['meta']['title']) ? sanitize_text_field($article['meta']['title']) : '');
@@ -100,47 +88,28 @@ class WPJAI_Posts {
         }
         update_post_meta($post_id, '_meta_keywords', sanitize_text_field($keywords));
 
-        // Возвращаем URL редактирования для прямого перехода в Gutenberg
+        // Удаляем обработанную статью из кеша
+        $this->remove_published_article($article_index);
+
+        // Возвращаем URL редактирования и информацию о следующей статье
+        $next_article = $this->get_next_article($article_index);
+
         wp_send_json_success(array(
             'post_id' => $post_id,
             'edit_url' => admin_url('post.php?post=' . $post_id . '&action=edit'),
-            'view_url' => get_permalink($post_id)
+            'view_url' => get_permalink($post_id),
+            'next_article' => $next_article,
+            'has_next' => !empty($next_article)
         ));
     }
 
     /**
-     * Создание контента для Gutenberg с безопасной обработкой
+     * Обработка изображений в HTML контенте
+     * Загружает изображения с внешних URL и заменяет их на локальные
      */
-    private function create_gutenberg_content($article, $images, $selected_images) {
-        $blocks = [];
-
-        // Защита от пустых данных
-        if (empty($article)) {
-            return '';
-        }
-
-        // Добавляем мета-информацию как первый блок
-        if (!empty($article['meta'])) {
-            $metaBlock = [
-                'blockName' => 'core/paragraph',
-                'attrs' => [],
-                'innerContent' => [
-                    sprintf(
-                        '<small><strong>META Title:</strong> %s<br><strong>META Description:</strong> %s</small>',
-                        !empty($article['meta']['title']) ? esc_html($article['meta']['title']) : '',
-                        !empty($article['meta']['description']) ? esc_html($article['meta']['description']) : ''
-                    )
-                ]
-            ];
-            $blocks[] = $metaBlock;
-        }
-
-        // Безопасная обработка контента
-        $content = !empty($article['content']) ? $article['content'] : '';
-
-        // Если контент пустой, возвращаем пустой массив блоков
+    private function process_content_images($content) {
         if (empty($content)) {
-            return serialize_blocks($blocks);
+            return '';
         }
 
         // Создаем DOM для парсинга
@@ -150,70 +119,77 @@ class WPJAI_Posts {
         libxml_clear_errors();
 
         $xpath = new DOMXPath($dom);
-        $elements = $xpath->query('//body/*');
+        $images = $xpath->query('//img');
 
-        // Обработка элементов
-        foreach ($elements as $element) {
-            $elementHtml = $dom->saveHTML($element);
+        // Обрабатываем каждое изображение
+        foreach ($images as $img) {
+            $src = $img->getAttribute('src');
 
-            // Создаем текстовый блок
-            if ($element->nodeName === 'p') {
-                $blocks[] = [
-                    'blockName' => 'core/paragraph',
-                    'attrs' => [],
-                    'innerContent' => [wp_kses_post($elementHtml)]
-                ];
-            }
-            // Обработка изображений в тексте
-            elseif ($element->nodeName === 'img') {
-                $imageUrl = $element->getAttribute('src');
-                $imageAlt = $element->getAttribute('alt');
-                $imageClass = $element->getAttribute('class');
+            // Проверяем, является ли URL внешним
+            if (strpos($src, 'http') === 0) {
+                $alt = $img->getAttribute('alt') ?: 'Imported image';
 
-                // Находим соответствующее изображение
-                $matchedImage = null;
-                foreach ($selected_images as $image) {
-                    if ($image['url'] === $imageUrl) {
-                        $matchedImage = $image;
-                        break;
+                // Загружаем изображение и получаем ID вложения
+                $attachment_id = $this->upload_image_from_url($src, 0, $alt);
+
+                if (!is_wp_error($attachment_id) && $attachment_id > 0) {
+                    // Получаем URL загруженного изображения
+                    $attachment_url = wp_get_attachment_url($attachment_id);
+
+                    // Обновляем атрибуты изображения
+                    $img->setAttribute('src', $attachment_url);
+                    $img->setAttribute('data-attachment-id', $attachment_id);
+
+                    // Добавляем класс, если его нет
+                    $class = $img->getAttribute('class');
+                    if (empty($class)) {
+                        $img->setAttribute('class', 'wp-image-' . $attachment_id);
+                    } else {
+                        $img->setAttribute('class', $class . ' wp-image-' . $attachment_id);
                     }
                 }
-
-                if ($matchedImage) {
-                    $blocks[] = [
-                        'blockName' => 'core/image',
-                        'attrs' => [
-                            'id' => !empty($matchedImage['attachment_id']) ? $matchedImage['attachment_id'] : 0,
-                            'url' => $imageUrl,
-                            'alt' => $imageAlt,
-                            'className' => $imageClass,
-                            'sizeSlug' => 'large'
-                        ],
-                        'innerContent' => []
-                    ];
-                }
             }
         }
 
-        // Добавляем оставшиеся изображения, которые не были вставлены в текст
-        foreach ($images as $image) {
-            if (empty($image['url'])) continue;
+        // Получаем обновленный HTML
+        $body = $xpath->query('//body')->item(0);
+        $innerHtml = '';
 
-            $blocks[] = [
-                'blockName' => 'core/image',
-                'attrs' => [
-                    'id' => !empty($image['attachment_id']) ? $image['attachment_id'] : 0,
-                    'url' => $image['url'],
-                    'alt' => !empty($image['alt']) ? $image['alt'] : '',
-                    'sizeSlug' => 'large'
-                ],
-                'innerContent' => []
-            ];
+        foreach ($body->childNodes as $child) {
+            $innerHtml .= $dom->saveHTML($child);
         }
 
-        // Преобразуем блоки в строку для Gutenberg
-        return serialize_blocks($blocks);
+        return $innerHtml;
     }
+
+    /**
+     * Извлечение ID первого изображения из контента для установки миниатюры
+     */
+    private function extract_first_image_id($content) {
+        if (empty($content)) {
+            return 0;
+        }
+
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'));
+        libxml_clear_errors();
+
+        $xpath = new DOMXPath($dom);
+        $images = $xpath->query('//img');
+
+        if ($images->length > 0) {
+            $first_img = $images->item(0);
+            $attachment_id = $first_img->getAttribute('data-attachment-id');
+
+            if (!empty($attachment_id) && is_numeric($attachment_id)) {
+                return intval($attachment_id);
+            }
+        }
+
+        return 0;
+    }
+
     /**
      * Загрузка изображения по URL и прикрепление к посту
      */
@@ -256,5 +232,40 @@ class WPJAI_Posts {
         return $id;
     }
 
+    /**
+     * Удаление опубликованной статьи из кеша
+     */
+    private function remove_published_article($article_index) {
+        $articles = get_transient('wp_json_article_importer_articles');
 
+        if ($articles && isset($articles[$article_index])) {
+            // Удаляем статью из массива
+            unset($articles[$article_index]);
+
+            // Переиндексируем массив
+            $articles = array_values($articles);
+
+            // Обновляем кеш
+            set_transient('wp_json_article_importer_articles', $articles, 12 * HOUR_IN_SECONDS);
+        }
+    }
+
+    /**
+     * Получение следующей статьи после публикации
+     */
+    private function get_next_article($current_index) {
+        $articles = get_transient('wp_json_article_importer_articles');
+
+        if ($articles) {
+            // Переиндексируем массив после удаления
+            $articles = array_values($articles);
+
+            // Проверяем наличие следующей статьи в новом массиве
+            if (isset($articles[0])) {
+                return $articles[0];
+            }
+        }
+
+        return null;
+    }
 }

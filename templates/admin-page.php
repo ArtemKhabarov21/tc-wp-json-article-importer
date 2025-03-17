@@ -42,9 +42,12 @@
 
                         <div class="image-search">
                             <input type="text" id="unsplash-search" placeholder="Поиск изображений...">
+                            <button id="search-unsplash" class="button button-secondary">Поиск</button>
                         </div>
 
-
+                        <div class="drag-instruction">
+                            Вы можете перетащить изображение в текст статьи
+                        </div>
 
                         <div id="keywords-tags" class="keywords-tags"></div>
 
@@ -52,6 +55,28 @@
 
                         <div class="sidebar-publish-options">
                             <h3>Настройки публикации</h3>
+
+                            <div class="option">
+                                <label for="post-type">Тип контента:</label>
+                                <select id="post-type">
+                                    <option value="post">Запись</option>
+                                    <option value="page">Страница</option>
+                                </select>
+                            </div>
+
+                            <div class="option post-category-option">
+                                <label for="post-category">Категория:</label>
+                                <select id="post-category">
+                                    <option value="0">-- Выберите категорию --</option>
+                                    <?php
+                                    $categories = get_categories(array('hide_empty' => false));
+                                    foreach ($categories as $category) {
+                                        echo '<option value="' . esc_attr($category->term_id) . '">' . esc_html($category->name) . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+
                             <div class="option">
                                 <label for="post-status">Статус:</label>
                                 <select id="post-status">
@@ -60,21 +85,14 @@
                                     <option value="future">Отложить</option>
                                 </select>
                             </div>
+
                             <div class="option schedule-option" style="display:none;">
                                 <label for="schedule-date">Дата публикации:</label>
                                 <input type="datetime-local" id="schedule-date">
                             </div>
+
                             <button id="publish-article" class="button button-primary">Опубликовать</button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="publish-options" style="display:none;">
-                    <h3>Редактирование контента</h3>
-                    <p>Используйте кнопки ниже для активации режима редактирования статьи.</p>
-                    <div class="edit-buttons">
-                        <button id="enable-editor" class="button">Включить режим редактирования</button>
-                        <button id="back-to-preview" class="button" style="display:none;">Вернуться к предпросмотру</button>
                     </div>
                 </div>
             </div>
@@ -103,3 +121,62 @@
         </div>
     </div>
 </div>
+
+<!-- Подключаем TinyMCE для редактирования контента -->
+<?php
+// Подключаем редактор WordPress
+wp_enqueue_editor();
+?>
+
+<script>
+    jQuery(document).ready(function($) {
+        // Инициализация TinyMCE после загрузки статьи
+        function initTinyMCE() {
+            if (typeof tinyMCE !== 'undefined') {
+                // Проверяем существует ли уже экземпляр редактора
+                if (tinyMCE.get('article-content-editor')) {
+                    tinyMCE.remove('#article-content-editor');
+                }
+
+                // Добавляем скрытый textarea для инициализации TinyMCE
+                if ($('#article-content-editor').length === 0) {
+                    $('.article-preview').append('<textarea id="article-content-editor" style="width:100%; height:500px;"></textarea>');
+                }
+
+                // Инициализируем TinyMCE с нужными настройками
+                wp.editor.initialize('article-content-editor', {
+                    tinymce: {
+                        wpautop: true,
+                        plugins: 'paste,lists,link,image,media,wordpress,wplink,fullscreen',
+                        toolbar1: 'formatselect,bold,italic,bullist,numlist,blockquote,alignleft,aligncenter,alignright,link,wp_adv',
+                        toolbar2: 'fullscreen,pastetext,pasteword,removeformat,charmap,outdent,indent,undo,redo,wp_help',
+                        setup: function(editor) {
+                            // Добавляем обработчик для перетаскивания изображений
+                            editor.on('drop', function(e) {
+                                var dataTransfer = e.dataTransfer;
+                                if (dataTransfer && dataTransfer.getData('text')) {
+                                    try {
+                                        var imageData = JSON.parse(dataTransfer.getData('text'));
+                                        if (imageData.url) {
+                                            e.preventDefault();
+                                            editor.insertContent('<img src="' + imageData.url + '" alt="' + (imageData.alt || '') + '" />');
+                                        }
+                                    } catch (ex) {
+                                        // Это не JSON данные, пропускаем
+                                    }
+                                }
+                            });
+                        }
+                    },
+                    quicktags: true,
+                    mediaButtons: true
+                });
+            }
+        }
+
+        // После успешной загрузки статьи инициализируем TinyMCE
+        $(document).on('article_loaded', function() {
+            initTinyMCE();
+        });
+    });
+</script>

@@ -36,7 +36,11 @@ class WPJAI_Admin {
     /**
      * Подключение скриптов и стилей для админки
      */
+    /**
+     * Функция подключения скриптов и стилей для административной панели
+     */
     public function enqueue_admin_scripts($hook) {
+        // Загружаем скрипты только на странице плагина
         if ('toplevel_page_wp-json-article-importer' !== $hook) {
             return;
         }
@@ -49,14 +53,75 @@ class WPJAI_Admin {
             WPJAI_VERSION
         );
 
-        // Подключение скриптов
-        wp_enqueue_script(
+        // Подключение редактора WordPress
+        wp_enqueue_editor();
+
+        // Основной файл
+        wp_register_script(
             'wp-json-article-importer-js',
             WPJAI_PLUGIN_URL . 'assets/js/admin.js',
             array('jquery'),
             WPJAI_VERSION,
             true
         );
+
+        // Модули
+        wp_register_script(
+            'wp-json-article-importer-utils',
+            WPJAI_PLUGIN_URL . 'assets/js/modules/utils.js',
+            array('jquery', 'wp-json-article-importer-js'),
+            WPJAI_VERSION,
+            true
+        );
+
+        wp_register_script(
+            'wp-json-article-importer-editor',
+            WPJAI_PLUGIN_URL . 'assets/js/modules/editor.js',
+            array('jquery', 'wp-json-article-importer-js', 'wp-json-article-importer-utils'),
+            WPJAI_VERSION,
+            true
+        );
+
+        wp_register_script(
+            'wp-json-article-importer-images',
+            WPJAI_PLUGIN_URL . 'assets/js/modules/images.js',
+            array('jquery', 'wp-json-article-importer-js', 'wp-json-article-importer-utils'),
+            WPJAI_VERSION,
+            true
+        );
+
+        wp_register_script(
+            'wp-json-article-importer-articles',
+            WPJAI_PLUGIN_URL . 'assets/js/modules/articles.js',
+            array('jquery', 'wp-json-article-importer-js', 'wp-json-article-importer-utils', 'wp-json-article-importer-images', 'wp-json-article-importer-editor'),
+            WPJAI_VERSION,
+            true
+        );
+
+        wp_register_script(
+            'wp-json-article-importer-publish',
+            WPJAI_PLUGIN_URL . 'assets/js/modules/publish.js',
+            array('jquery', 'wp-json-article-importer-js', 'wp-json-article-importer-utils', 'wp-json-article-importer-images', 'wp-json-article-importer-editor'),
+            WPJAI_VERSION,
+            true
+        );
+
+        wp_register_script(
+            'wp-json-article-importer-settings',
+            WPJAI_PLUGIN_URL . 'assets/js/modules/settings.js',
+            array('jquery', 'wp-json-article-importer-js', 'wp-json-article-importer-utils'),
+            WPJAI_VERSION,
+            true
+        );
+
+        // Подключение скриптов в правильном порядке
+        wp_enqueue_script('wp-json-article-importer-js');
+        wp_enqueue_script('wp-json-article-importer-utils');
+        wp_enqueue_script('wp-json-article-importer-editor');
+        wp_enqueue_script('wp-json-article-importer-images');
+        wp_enqueue_script('wp-json-article-importer-articles');
+        wp_enqueue_script('wp-json-article-importer-publish');
+        wp_enqueue_script('wp-json-article-importer-settings');
 
         // Локализация скрипта
         wp_localize_script('wp-json-article-importer-js', 'wp_json_importer', array(
