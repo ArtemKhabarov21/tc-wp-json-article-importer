@@ -6,14 +6,12 @@ class WPJAI_Posts {
     public function init() {
         // Регистрация обработчика AJAX для создания записей
         add_action('wp_ajax_create_post_from_json', array($this, 'ajax_create_post_from_json'));
+
+        // Регистрация обработчика для загрузки изображений
+        add_action('wp_ajax_upload_image_to_media_library', array($this, 'ajax_upload_image_to_media_library'));
+        add_action('wp_ajax_get_attachment_url', array($this, 'ajax_get_attachment_url'));
     }
 
-    /**
-     * AJAX: Создание записи из JSON
-     */
-    /**
-     * AJAX: Создание записи из JSON
-     */
     /**
      * AJAX: Создание записи из JSON
      */
@@ -29,9 +27,24 @@ class WPJAI_Posts {
         // Получение данных
         $article_index = isset($_POST['article_index']) ? intval($_POST['article_index']) : 0;
         $post_status = isset($_POST['post_status']) ? sanitize_text_field($_POST['post_status']) : 'draft';
-        $post_type = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : 'post';
+        $post_type = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : 'page'; // По умолчанию страница
         $category_id = isset($_POST['category_id']) ? intval($_POST['category_id']) : 0;
         $schedule_date = isset($_POST['schedule_date']) ? sanitize_text_field($_POST['schedule_date']) : '';
+
+        // Новые поля из формы
+        $post_title = isset($_POST['post_title']) ? sanitize_text_field($_POST['post_title']) : '';
+        $meta_title = isset($_POST['meta_title']) ? sanitize_text_field($_POST['meta_title']) : '';
+        $meta_description = isset($_POST['meta_description']) ? sanitize_text_field($_POST['meta_description']) : '';
+        $meta_keywords = isset($_POST['meta_keywords']) ? sanitize_text_field($_POST['meta_keywords']) : '';
+
+        // ID миниатюры из AJAX запроса
+        $thumbnail_id = isset($_POST['thumbnail_id']) ? intval($_POST['thumbnail_id']) : 0;
+
+        // SEO плагины
+        $seo_plugins = isset($_POST['seo_plugins']) ? $_POST['seo_plugins'] : array();
+        if (!is_array($seo_plugins)) {
+            $seo_plugins = array();
+        }
 
         // Очистка контента от специальных тегов, которые могут вызывать проблемы
         $content_html = isset($_POST['content_html']) ? $_POST['content_html'] : '';
@@ -53,12 +66,16 @@ class WPJAI_Posts {
             // Обработка контента с изображениями
             $content_with_images = $this->process_content_images($content_html);
 
-            // Устанавливаем миниатюру поста из первого изображения (если есть)
-            $featured_image_id = $this->extract_first_image_id($content_with_images);
+            // Устанавливаем миниатюру поста из первого изображения только если не выбрана миниатюра вручную
+            if ($thumbnail_id <= 0) {
+                $featured_image_id = $this->extract_first_image_id($content_with_images);
+            } else {
+                $featured_image_id = $thumbnail_id;
+            }
 
             // Создаем пост
             $post_data = array(
-                'post_title'    => sanitize_text_field($article['h1']),
+                'post_title'    => !empty($post_title) ? $post_title : sanitize_text_field($article['h1']),
                 'post_content'  => $content_with_images,
                 'post_status'   => $post_status,
                 'post_type'     => $post_type
@@ -88,20 +105,8 @@ class WPJAI_Posts {
                 wp_set_post_categories($post_id, array($category_id));
             }
 
-            // Добавляем мета-информацию
-            if (isset($article['meta']) && is_array($article['meta'])) {
-                update_post_meta($post_id, '_meta_title',
-                    !empty($article['meta']['title']) ? sanitize_text_field($article['meta']['title']) : '');
-                update_post_meta($post_id, '_meta_description',
-                    !empty($article['meta']['description']) ? sanitize_text_field($article['meta']['description']) : '');
-
-                // Обработка ключевых слов с проверкой типа
-                $keywords = !empty($article['meta']['keywords']) ? $article['meta']['keywords'] : '';
-                if (is_array($keywords)) {
-                    $keywords = implode(', ', array_filter($keywords));
-                }
-                update_post_meta($post_id, '_meta_keywords', sanitize_text_field($keywords));
-            }
+            // Добавляем мета-информацию в зависимости от активных SEO плагинов
+            $this->add_seo_meta_data($post_id, $meta_title, $meta_description, $meta_keywords, $seo_plugins);
 
             // Удаляем обработанную статью из кеша
             $this->remove_published_article($article_index);
@@ -122,6 +127,103 @@ class WPJAI_Posts {
         }
     }
 
+    /**
+     * Добавление мета-данных SEO в зависимости от активных плагинов
+     */
+    private function add_seo_meta_data($post_id, $meta_title, $meta_description, $meta_keywords, $seo_plugins) {
+        // Всегда сохраняем стандартные мета-поля
+        update_post_meta($post_id, '_wpjai_meta_title', $meta_title);
+        update_post_meta($post_id, '_wpjai_meta_description', $meta_description);
+        update_post_meta($post_id, '_wpjai_meta_keywords', $meta_keywords);
+
+        // Поддержка Yoast SEO
+        if (in_array('yoast', $seo_plugins)) {
+            update_post_meta($post_id, '_yoast_wpseo_title', $meta_title);
+            update_post_meta($post_id, '_yoast_wpseo_metadesc', $meta_description);
+            update_post_meta($post_id, '_yoast_wpseo_focuskw', $meta_keywords);
+        }
+
+        // Поддержка SEO Framework
+        if (in_array('seo_framework', $seo_plugins)) {
+            update_post_meta($post_id, '_genesis_title', $meta_title);
+            update_post_meta($post_id, '_genesis_description', $meta_description);
+            update_post_meta($post_id, '_genesis_keywords', $meta_keywords);
+        }
+
+        // Поддержка CDS Simple SEO
+        if (in_array('cds_simple_seo', $seo_plugins)) {
+            update_post_meta($post_id, '_cds_title', $meta_title);
+            update_post_meta($post_id, '_cds_description', $meta_description);
+            update_post_meta($post_id, '_cds_keywords', $meta_keywords);
+        }
+
+        // Поддержка SEOPress
+        if (in_array('seopress', $seo_plugins)) {
+            update_post_meta($post_id, '_seopress_titles_title', $meta_title);
+            update_post_meta($post_id, '_seopress_titles_desc', $meta_description);
+            update_post_meta($post_id, '_seopress_analysis_target_kw', $meta_keywords);
+        }
+    }
+
+    /**
+     * AJAX: Загрузка изображения в медиабиблиотеку из URL
+     */
+    public function ajax_upload_image_to_media_library() {
+        // Проверка nonce
+        check_ajax_referer('wp_json_article_importer_nonce', 'nonce');
+
+        // Проверка прав доступа
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Недостаточно прав');
+        }
+
+        $image_url = isset($_POST['image_url']) ? esc_url_raw($_POST['image_url']) : '';
+        $alt_text = isset($_POST['alt_text']) ? sanitize_text_field($_POST['alt_text']) : '';
+
+        if (empty($image_url)) {
+            wp_send_json_error('URL изображения не указан');
+        }
+
+        $attachment_id = $this->upload_image_from_url($image_url, 0, $alt_text);
+
+        if (is_wp_error($attachment_id)) {
+            wp_send_json_error($attachment_id->get_error_message());
+        }
+
+        wp_send_json_success(array(
+            'attachment_id' => $attachment_id,
+            'url' => wp_get_attachment_url($attachment_id)
+        ));
+    }
+
+    /**
+     * AJAX: Получение URL вложения по ID
+     */
+    public function ajax_get_attachment_url() {
+        // Проверка nonce
+        check_ajax_referer('wp_json_article_importer_nonce', 'nonce');
+
+        // Проверка прав доступа
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Недостаточно прав');
+        }
+
+        $attachment_id = isset($_POST['attachment_id']) ? intval($_POST['attachment_id']) : 0;
+
+        if ($attachment_id <= 0) {
+            wp_send_json_error('Неверный ID вложения');
+        }
+
+        $url = wp_get_attachment_url($attachment_id);
+
+        if (!$url) {
+            wp_send_json_error('URL вложения не найден');
+        }
+
+        wp_send_json_success(array(
+            'url' => $url
+        ));
+    }
 
     /**
      * Обработка изображений в HTML контенте
@@ -260,9 +362,6 @@ class WPJAI_Posts {
         return 0;
     }
 
-    /**
-     * Загрузка изображения по URL и прикрепление к посту
-     */
     /**
      * Загрузка изображения по URL и прикрепление к посту
      */

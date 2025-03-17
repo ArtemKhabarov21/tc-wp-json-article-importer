@@ -10,6 +10,9 @@
         init: function() {
             // Инициализация обработчиков событий
             this.initEventHandlers();
+
+            // Получение информации о доступных SEO плагинах
+            this.detectSeoPlugins();
         },
 
         // Инициализация обработчиков событий
@@ -38,9 +41,43 @@
             $('#publish-article').on('click', this.publishArticle);
         },
 
-        // Функция публикации статьи
+        // Обнаружение установленных SEO плагинов
+        detectSeoPlugins: function() {
+            $.ajax({
+                url: wp_json_importer.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'detect_seo_plugins',
+                    nonce: wp_json_importer.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        WPJAI.data.seoPlugins = response.data.plugins;
+                        WPJAI.data.defaultPostType = response.data.default_post_type || 'page';
+
+                        console.log('Обнаружены SEO плагины:', WPJAI.data.seoPlugins);
+                        console.log('Тип контента по умолчанию:', WPJAI.data.defaultPostType);
+
+                        // Устанавливаем тип контента по умолчанию
+                        if (WPJAI.data.defaultPostType) {
+                            $('#post-type').val(WPJAI.data.defaultPostType);
+                            $('#post-type').trigger('change');
+                        }
+                    } else {
+                        console.error('Ошибка при определении SEO плагинов:', response.data);
+                    }
+                },
+                error: function() {
+                    console.error('Ошибка AJAX при определении SEO плагинов');
+                }
+            });
+        },
+
         // Функция публикации статьи
         publishArticle: function() {
+            // Сохраняем текущие данные статьи перед публикацией
+            WPJAI.Articles.saveCurrentArticleData();
+
             const postStatus = $('#post-status').val();
             const postType = $('#post-type').val();
             const categoryId = $('#post-category').val();
@@ -54,13 +91,24 @@
                 }
             }
 
+            // Получаем заголовок статьи
+            const title = $('#article-title').val();
+            if (!title) {
+                WPJAI.Utils.showNotice('error', 'Заголовок статьи не может быть пустым.');
+                return;
+            }
+
             // Получаем HTML-контент из редактора TinyMCE
             let contentHtml = WPJAI.Editor.getContent();
-
             if (!contentHtml) {
                 WPJAI.Utils.showNotice('error', 'Контент статьи не может быть пустым.');
                 return;
             }
+
+            // Получаем мета-данные
+            const metaTitle = $('#meta-title').val();
+            const metaDescription = $('#meta-description').val();
+            const metaKeywords = $('#meta-keywords').val();
 
             // Удаляем любые проблемные теги из контента
             contentHtml = contentHtml.replace(/<userStyle>.*?<\/userStyle>/g, '');
@@ -79,11 +127,16 @@
                             action: 'create_post_from_json',
                             nonce: wp_json_importer.nonce,
                             article_index: WPJAI.data.currentArticleIndex,
+                            post_title: title,
                             post_status: postStatus,
                             post_type: postType,
                             category_id: categoryId,
                             schedule_date: scheduleDate,
-                            content_html: processedContent
+                            content_html: processedContent,
+                            meta_title: metaTitle,
+                            meta_description: metaDescription,
+                            meta_keywords: metaKeywords,
+                            seo_plugins: WPJAI.data.seoPlugins || []
                         },
                         success: function(response) {
                             $('#publish-article').prop('disabled', false).text('Опубликовать');

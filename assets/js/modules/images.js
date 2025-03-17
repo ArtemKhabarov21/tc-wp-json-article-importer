@@ -4,8 +4,14 @@
 (function($) {
     'use strict';
 
+    // Создаем глобальный объект плагина, если он еще не существует
+    window.WPJAI = window.WPJAI || {};
+
     // Создаем модуль изображений в глобальном объекте WPJAI
     WPJAI.Images = {
+        // Хранение выбранной миниатюры
+        selectedThumbnail: null,
+
         // Инициализация модуля
         init: function() {
             // Инициализация обработчиков событий
@@ -32,6 +38,11 @@
                     e.preventDefault();
                     $('#search-unsplash').click();
                 }
+            });
+
+            // Обработка клика для удаления миниатюры
+            $(document).on('click', '#remove-thumbnail', function() {
+                WPJAI.Images.clearThumbnail();
             });
         },
 
@@ -75,11 +86,12 @@
 
             let html = '';
 
-
-
             $.each(images, function(index, image) {
+                const isThumbnail = WPJAI.Images.selectedThumbnail && WPJAI.Images.selectedThumbnail.id === image.id;
+                const thumbnailClass = isThumbnail ? 'is-thumbnail' : '';
+
                 html += `
-                    <div class="image-item">
+                    <div class="image-item ${thumbnailClass}" data-id="${image.id}">
                         <img src="${image.thumb}" alt="${image.alt || query}" class="draggable-image" 
                             draggable="true" 
                             data-id="${image.id}" 
@@ -87,6 +99,14 @@
                             data-full="${image.full}"
                             data-alt="${image.alt || query}"
                             data-keyword="${query}">
+                        <div class="image-actions">
+                            <button type="button" class="insert-image" title="Вставить в текст">
+                                <span class="dashicons dashicons-editor-paste-text"></span>
+                            </button>
+                            <button type="button" class="set-thumbnail" title="Установить как миниатюру">
+                                <span class="dashicons dashicons-format-image"></span>
+                            </button>
+                        </div>
                     </div>
                 `;
             });
@@ -95,6 +115,9 @@
 
             // Инициализируем функционал перетаскивания
             WPJAI.Images.initDraggable();
+
+            // Добавляем обработчики для действий с изображениями
+            WPJAI.Images.initImageActions();
         },
 
         // Инициализация перетаскиваемых изображений
@@ -109,6 +132,74 @@
                 };
                 e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify(imageData));
             });
+        },
+
+        // Инициализация действий с изображениями (вставка в текст и установка миниатюры)
+        initImageActions: function() {
+            // Вставка изображения в текст
+            $('.image-actions .insert-image').on('click', function() {
+                const $img = $(this).closest('.image-item').find('img');
+                const imageUrl = $img.data('url');
+                const imageAlt = $img.data('alt');
+
+                if (tinyMCE.activeEditor) {
+                    tinyMCE.activeEditor.execCommand('mceInsertContent', false, `<img src="${imageUrl}" alt="${imageAlt}" />`);
+                    WPJAI.Utils.showNotice('success', 'Изображение добавлено в текст');
+                }
+            });
+
+            // Установка изображения как миниатюры
+            $('.image-actions .set-thumbnail').on('click', function() {
+                const $item = $(this).closest('.image-item');
+                const $img = $item.find('img');
+
+                // Получаем данные изображения
+                const imageData = {
+                    id: $img.data('id'),
+                    url: $img.data('url'),
+                    full: $img.data('full'),
+                    thumb: $img.attr('src'),
+                    alt: $img.data('alt'),
+                    keyword: $img.data('keyword')
+                };
+
+                // Устанавливаем миниатюру
+                WPJAI.Images.setThumbnail(imageData);
+
+                // Отмечаем выбранное изображение
+                $('.image-item').removeClass('is-thumbnail');
+                $item.addClass('is-thumbnail');
+            });
+        },
+
+        // Установка выбранного изображения как миниатюры
+        setThumbnail: function(imageData) {
+            // Сохраняем данные о выбранной миниатюре
+            WPJAI.Images.selectedThumbnail = imageData;
+
+            // Обновляем область предпросмотра миниатюры
+            const previewHtml = `<img src="${imageData.url}" alt="${imageData.alt}" />`;
+            $('#thumbnail-preview').html(previewHtml);
+
+            // Показываем кнопку удаления миниатюры
+            $('#remove-thumbnail').show();
+
+            WPJAI.Utils.showNotice('success', 'Миниатюра установлена');
+        },
+
+        // Очистка выбранной миниатюры
+        clearThumbnail: function() {
+            // Сбрасываем данные о выбранной миниатюре
+            WPJAI.Images.selectedThumbnail = null;
+
+            // Очищаем область предпросмотра миниатюры
+            $('#thumbnail-preview').html('<p class="no-thumbnail">Миниатюра не выбрана</p>');
+
+            // Скрываем кнопку удаления миниатюры
+            $('#remove-thumbnail').hide();
+
+            // Снимаем отметку с выбранного изображения
+            $('.image-item').removeClass('is-thumbnail');
         },
 
         // Функция для отображения контекстного меню с выбором изображений

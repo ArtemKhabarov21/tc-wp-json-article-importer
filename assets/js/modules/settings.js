@@ -24,6 +24,7 @@
 
             const jsonFileUrl = $('#json-file-url').val();
             const apiKeys = $('#api-keys').val();
+            const defaultPostType = $('#default-post-type').val();
 
             $.ajax({
                 url: wp_json_importer.ajax_url,
@@ -32,7 +33,8 @@
                     action: 'save_plugin_settings',
                     nonce: wp_json_importer.nonce,
                     json_file_url: jsonFileUrl,
-                    api_keys: apiKeys
+                    api_keys: apiKeys,
+                    default_post_type: defaultPostType
                 },
                 beforeSend: function() {
                     $('#settings-form button[type="submit"]').prop('disabled', true).text('Сохранение...');
@@ -43,6 +45,9 @@
 
                     if (response.success) {
                         WPJAI.Utils.showNotice('success', 'Настройки успешно сохранены.');
+
+                        // Обновляем настройки в глобальных данных
+                        WPJAI.data.defaultPostType = defaultPostType;
                     } else {
                         WPJAI.Utils.showNotice('error', `Ошибка: ${response.data}`);
                     }
@@ -81,30 +86,11 @@
             if (settings) {
                 $('#json-file-url').val(settings.json_file_url || '');
                 $('#api-keys').val(settings.api_keys || '');
-            }
-        },
 
-        // Проверка валидности API ключа Unsplash
-        validateUnsplashApiKey: function(apiKey, callback) {
-            $.ajax({
-                url: wp_json_importer.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'validate_unsplash_api_key',
-                    nonce: wp_json_importer.nonce,
-                    api_key: apiKey
-                },
-                success: function(response) {
-                    if (typeof callback === 'function') {
-                        callback(response.success, response.data);
-                    }
-                },
-                error: function() {
-                    if (typeof callback === 'function') {
-                        callback(false, 'Произошла ошибка при проверке API ключа.');
-                    }
+                if (settings.default_post_type) {
+                    $('#default-post-type').val(settings.default_post_type);
                 }
-            });
+            }
         }
     };
 

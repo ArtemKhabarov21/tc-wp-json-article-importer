@@ -30,9 +30,32 @@
 
                 <div class="preview-container" style="display:none;">
                     <div class="preview-panel">
+
                         <div class="article-preview">
                             <div class="no-article">
                                 <p>Нажмите "Загрузить статьи из JSON" для начала работы.</p>
+                            </div>
+                        </div>
+                        <!-- Новые поля для SEO и заголовка -->
+                        <div class="article-metadata">
+                            <div class="form-group">
+                                <label for="article-title"><strong>Заголовок (H1):</strong></label>
+                                <input type="text" id="article-title" class="regular-text" style="width: 100%;">
+                            </div>
+                            <div class="form-group meta-fields">
+                                <label for="meta-title"><strong>SEO заголовок (title):</strong></label>
+                                <input type="text" id="meta-title" class="regular-text" style="width: 100%;">
+                                <p class="description">Рекомендуемая длина: до 60 символов</p>
+                            </div>
+                            <div class="form-group meta-fields">
+                                <label for="meta-description"><strong>META описание:</strong></label>
+                                <textarea id="meta-description" rows="3" style="width: 100%;"></textarea>
+                                <p class="description">Рекомендуемая длина: до 160 символов</p>
+                            </div>
+                            <div class="form-group meta-fields">
+                                <label for="meta-keywords"><strong>META ключевые слова:</strong></label>
+                                <input type="text" id="meta-keywords" class="regular-text" style="width: 100%;">
+                                <p class="description">Разделяйте ключевые слова запятыми</p>
                             </div>
                         </div>
                     </div>
@@ -53,18 +76,25 @@
 
                         <div id="unsplash-results" class="image-results"></div>
 
+
                         <div class="sidebar-publish-options">
                             <h3>Настройки публикации</h3>
 
                             <div class="option">
                                 <label for="post-type">Тип контента:</label>
                                 <select id="post-type">
-                                    <option value="post">Запись</option>
                                     <option value="page">Страница</option>
+                                    <option value="post">Запись</option>
                                 </select>
                             </div>
-
-                            <div class="option post-category-option">
+                            <div class="selected-thumbnail">
+                                <h4>Миниатюра записи</h4>
+                                <div id="thumbnail-preview">
+                                    <p class="no-thumbnail">Миниатюра не выбрана</p>
+                                </div>
+                                <button id="remove-thumbnail" class="button button-secondary" style="display:none;">Удалить миниатюру</button>
+                            </div>
+                            <div class="option post-category-option" style="display:none;">
                                 <label for="post-category">Категория:</label>
                                 <select id="post-category">
                                     <option value="0">-- Выберите категорию --</option>
@@ -113,6 +143,15 @@
                         <label for="api-keys">API ключи Unsplash (через запятую):</label>
                         <textarea id="api-keys" rows="3" class="large-text"><?php echo esc_textarea($settings['api_keys']); ?></textarea>
                         <p class="description">Укажите один или несколько API ключей Unsplash через запятую. Ключи будут использоваться по очереди.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="default-post-type">Тип контента по умолчанию:</label>
+                        <select id="default-post-type">
+                            <option value="page" <?php selected( isset($settings['default_post_type']) ? $settings['default_post_type'] : 'page', 'page' ); ?>>Страница</option>
+                            <option value="post" <?php selected( isset($settings['default_post_type']) ? $settings['default_post_type'] : 'page', 'post' ); ?>>Запись</option>
+                        </select>
+                        <p class="description">Выберите тип контента, который будет использоваться по умолчанию при импорте.</p>
                     </div>
 
                     <button type="submit" class="button button-primary">Сохранить настройки</button>
