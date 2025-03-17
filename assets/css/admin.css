@@ -1,0 +1,332 @@
+/* Admin Styles для WP JSON Article Importer */
+
+.wrap .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.tab-content {
+    margin-top: 15px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.nav-tab-wrapper {
+    margin-bottom: 0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+/* Основной контейнер превью и изображений */
+.preview-container {
+    display: flex;
+    margin: 20px 0;
+}
+
+/* Панель предпросмотра статьи (левая колонка) */
+.preview-panel {
+    flex: 2;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 0;
+    position: relative;
+    min-height: 600px;
+}
+
+.article-preview {
+    padding: 20px;
+    min-height: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.article-preview h1 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #23282d;
+}
+
+.article-preview .meta-info {
+    background: #f8f8f8;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.content-preview {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.content-preview img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Панель изображений (правая колонка) */
+.images-panel {
+    flex: 1;
+    padding: 15px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-left: none;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+.image-results {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.sidebar-publish-options {
+    border-top: 1px solid #ddd;
+    padding-top: 15px;
+    margin-top: auto;
+}
+
+.sidebar-publish-options h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.sidebar-publish-options .option {
+    margin-bottom: 15px;
+}
+
+.sidebar-publish-options label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.sidebar-publish-options select,
+.sidebar-publish-options input {
+    width: 100%;
+}
+
+.sidebar-publish-options .button-primary {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+    padding: 8px 0;
+    height: auto;
+}
+
+.editable-content {
+    min-height: 400px;
+    border: 1px dashed #ccc;
+    padding: 10px;
+    background-color: #fff;
+}
+
+.edit-buttons {
+    margin-top: 10px;
+}
+
+.images-panel h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    font-size: 16px;
+}
+
+.image-search {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.image-search input {
+    flex-grow: 1;
+}
+
+.drag-instruction {
+    padding: 8px;
+    background-color: #e7f5fa;
+    border: 1px dashed #0073aa;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* Стили для тегов ключевых слов */
+.keywords-tags {
+    margin-bottom: 15px;
+}
+
+.keywords-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.keywords-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.keyword-tag {
+    background-color: #e7f5fa;
+    border: 1px solid #8bbad0;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.keyword-tag:hover {
+    background-color: #d1ebf5;
+}
+
+/* Результаты поиска изображений */
+.image-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.image-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 110px;
+}
+
+.image-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: grab;
+}
+
+.draggable-image {
+    cursor: grab;
+}
+
+.draggable-image:active {
+    cursor: grabbing;
+}
+
+.drag-over {
+    border: 2px dashed #0073aa !important;
+    background-color: #f0f8ff !important;
+}
+
+.inserted-image {
+    max-width: 100%;
+    height: auto;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Навигация по статьям */
+.article-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.article-counter {
+    font-weight: 600;
+}
+
+/* Настройки публикации */
+.publish-options {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.publish-options .option {
+    margin-bottom: 10px;
+}
+
+.publish-options label {
+    display: inline-block;
+    width: 120px;
+    font-weight: 600;
+}
+
+.action-buttons {
+    margin-bottom: 20px;
+}
+
+.no-article {
+    text-align: center;
+    padding: 40px 0;
+    color: #777;
+}
+
+/* Адаптивность */
+@media screen and (max-width: 782px) {
+    .importer-container {
+        flex-direction: column;
+    }
+
+    .preview-panel, .images-panel {
+        width: 100%;
+    }
+
+    .image-results {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+
+    .article-navigation {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .publish-options label {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
