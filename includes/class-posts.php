@@ -1,8 +1,4 @@
 <?php
-/**
- * Работа с записями для плагина WP JSON Article Importer
- */
-
 class WPJAI_Posts {
     /**
      * Инициализация класса
@@ -29,7 +25,6 @@ class WPJAI_Posts {
         $post_status = isset($_POST['post_status']) ? sanitize_text_field($_POST['post_status']) : 'draft';
         $schedule_date = isset($_POST['schedule_date']) ? sanitize_text_field($_POST['schedule_date']) : '';
         $selected_images = isset($_POST['images']) ? $_POST['images'] : array();
-        $content = isset($_POST['content']) ? $_POST['content'] : '';
 
         // Получение кэшированных статей
         $articles = get_transient('wp_json_article_importer_articles');
@@ -39,11 +34,6 @@ class WPJAI_Posts {
         }
 
         $article = $articles[$article_index];
-
-        // Если контент не был передан, используем оригинальный из JSON
-        if (empty($content)) {
-            $content = $article['content'];
-        }
 
         // Загрузка и прикрепление изображений
         $images_with_attachments = array();
@@ -66,23 +56,12 @@ class WPJAI_Posts {
             }
         }
 
-        // Обработка контента с изображениями
-        $processed_content = $this->process_content_with_images($content, $images_with_attachments);
-
-        // Создание поста
+        // Создаем пост
         $post_data = array(
             'post_title'    => sanitize_text_field($article['h1']),
-            'post_content'  => $processed_content,
+            'post_content'  => $this->create_gutenberg_content($article, $images_with_attachments),
             'post_status'   => $post_status,
-            'post_type'     => 'post',
-            'post_excerpt'  => '',
-            'meta_input'    => array(
-                '_meta_title' => sanitize_text_field($article['meta']['title']),
-                '_meta_description' => sanitize_text_field($article['meta']['description']),
-                '_meta_keywords' => is_array($article['meta']['keywords']) ?
-                    sanitize_text_field(implode(', ', $article['meta']['keywords'])) :
-                    sanitize_text_field($article['meta']['keywords']),
-            ),
+            'post_type'     => 'post'
         );
 
         // Обработка отложенной публикации
@@ -103,60 +82,67 @@ class WPJAI_Posts {
             set_post_thumbnail($post_id, $featured_image_id);
         }
 
+        // Добавляем мета-информацию
+        update_post_meta($post_id, '_meta_title', sanitize_text_field($article['meta']['title']));
+        update_post_meta($post_id, '_meta_description', sanitize_text_field($article['meta']['description']));
+        update_post_meta($post_id, '_meta_keywords',
+            is_array($article['meta']['keywords']) ?
+                sanitize_text_field(implode(', ', $article['meta']['keywords'])) :
+                sanitize_text_field($article['meta']['keywords'])
+        );
+
+        // Возвращаем URL редактирования для прямого перехода в Gutenberg
         wp_send_json_success(array(
             'post_id' => $post_id,
-            'edit_url' => get_edit_post_link($post_id, 'raw'),
-            'view_url' => get_permalink($post_id),
+            'edit_url' => admin_url('post.php?post=' . $post_id . '&action=edit')
         ));
     }
 
-    /**
-     * Обработка контента с добавлением изображений
-     */
-    private function process_content_with_images($content, $images) {
-        if (empty($images)) {
-            return $content;
+// Метод для создания контента в формате Gutenberg
+    private function create_gutenberg_content($article, $images) {
+        $blocks = [];
+
+        // Добавляем мета-информацию как первый блок
+        if ($article['meta']) {
+            $blocks[] = [
+                'blockName' => 'core/paragraph',
+                'attrs' => [],
+                'innerContent' => [
+                    sprintf(
+                        '<small><strong>META Title:</strong> %s<br><strong>META Description:</strong> %s</small>',
+                        esc_html($article['meta']['title']),
+                        esc_html($article['meta']['description'])
+                    )
+                ]
+            ];
         }
 
-        // Ищем все теги изображений с классом inserted-image
-        preg_match_all('/<img[^>]+class="inserted-image"[^>]*>/i', $content, $matches);
+        // Добавляем основной текст статьи
+        $blocks[] = [
+            'blockName' => 'core/paragraph',
+            'attrs' => [],
+            'innerContent' => [wp_kses_post($article['content'])]
+        ];
 
-        if (!empty($matches[0])) {
-            // Для каждого найденного тега изображения
-            foreach ($matches[0] as $img_tag) {
-                // Извлекаем URL изображения
-                preg_match('/src="([^"]+)"/i', $img_tag, $src_matches);
-
-                if (!empty($src_matches[1])) {
-                    $img_url = $src_matches[1];
-
-                    // Ищем соответствующее изображение в массиве выбранных
-                    foreach ($images as $image) {
-                        if ($image['url'] === $img_url) {
-                            // Получаем ID загруженного медиа-файла
-                            $attachment_id = isset($image['attachment_id']) ? $image['attachment_id'] : 0;
-
-                            if ($attachment_id > 0) {
-                                // Получаем URL загруженного изображения
-                                $uploaded_img_url = wp_get_attachment_url($attachment_id);
-
-                                // Создаем новый тег с URL загруженного изображения
-                                $new_img_tag = str_replace($img_url, $uploaded_img_url, $img_tag);
-
-                                // Заменяем в контенте старый тег на новый
-                                $content = str_replace($img_tag, $new_img_tag, $content);
-                            }
-
-                            break;
-                        }
-                    }
-                }
-            }
+        // Добавляем изображения
+        foreach ($images as $image) {
+            $blocks[] = [
+                'blockName' => 'core/image',
+                'attrs' => [
+                    'id' => $image['attachment_id'],
+                    'url' => $image['url'],
+                    'alt' => $image['alt'] ?? '',
+                    'sizeSlug' => 'large'
+                ],
+                'innerContent' => []
+            ];
         }
+
+        // Преобразуем блоки в строку для Gutenberg
+        $content = serialize_blocks($blocks);
 
         return $content;
     }
-
     /**
      * Загрузка изображения по URL и прикрепление к посту
      */

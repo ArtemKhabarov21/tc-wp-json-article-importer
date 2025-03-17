@@ -1,47 +1,3 @@
-// Инициализация режима редактирования
-function initEditMode() {
-    $('#enable-editor').on('click', function() {
-        // Сохраняем оригинальное содержимое для возможного восстановления
-        const originalContent = $('.content-preview').html();
-        $('.article-preview').data('original-content', originalContent);
-
-        // Делаем контент редактируемым
-        $('.content-preview').attr('contenteditable', 'true').addClass('editable-content');
-        $('.article-title').attr('contenteditable', 'true').addClass('editable-content');
-
-        // Переключаем кнопки
-        $('#enable-editor').hide();
-        $('#back-to-preview').show();
-
-        // Показываем сообщение пользователю
-        showNotice('info', 'Режим редактирования включен. Вы можете редактировать текст и добавлять изображения в любое место.');
-    });
-
-    $('#back-to-preview').on('click', function() {
-        // Спрашиваем пользователя, хочет ли он сохранить изменения
-        if (confirm('Сохранить внесенные изменения?')) {
-            // Сохраняем изменения
-            // Они уже находятся в DOM, поэтому дополнительные действия не требуются
-        } else {
-            // Восстанавливаем оригинальное содержимое
-            const originalContent = $('.article-preview').data('original-content');
-            $('.content-preview').html(originalContent);
-        }
-
-        // Делаем контент нередактируемым
-        $('.content-preview').removeAttr('contenteditable').removeClass('editable-content');
-        $('.article-title').removeAttr('contenteditable').removeClass('editable-content');
-
-        // Переключаем кнопки
-        $('#enable-editor').show();
-        $('#back-to-preview').hide();
-
-        // Показываем сообщение пользователю
-        showNotice('success', 'Режим редактирования отключен.');
-    });
-}/**
- * Скрипт админ-панели для WP JSON Article Importer
- */
 jQuery(document).ready(function($) {
     // Переменные для хранения данных
     let articles = [];
@@ -212,8 +168,7 @@ jQuery(document).ready(function($) {
 
     $('#next-article').on('click', function() {
         if (currentArticleIndex < articles - 1) {
-            currentArticleIndex++;
-            loadArticle(currentArticleIndex);
+            currentArticleIndex++; loadArticle(currentArticleIndex);
         }
     });
 
@@ -410,14 +365,8 @@ jQuery(document).ready(function($) {
             });
         }
 
-        // Инициализация drag and drop
-        initDropArea();
-
         // Показываем контейнер с превью статьи и опции публикации
         $('.preview-container, .publish-options').show();
-
-        // Инициализируем режим редактирования
-        initEditMode();
     }
 
     // Поиск изображений на Unsplash по ключевым словам
@@ -495,95 +444,6 @@ jQuery(document).ready(function($) {
                 keyword: $(this).data('keyword')
             };
             e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify(imageData));
-        });
-    }
-
-    // Инициализация области перетаскивания
-    function initDropArea() {
-        // Делаем область предпросмотра статьи dropzone
-        const articlePreview = $('.article-preview');
-
-        articlePreview.on('dragover', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $(this).addClass('drag-over');
-        });
-
-        articlePreview.on('dragleave', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $(this).removeClass('drag-over');
-        });
-
-        articlePreview.on('drop', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $(this).removeClass('drag-over');
-
-            const imageDataStr = e.originalEvent.dataTransfer.getData('text/plain');
-
-            try {
-                const imageData = JSON.parse(imageDataStr);
-
-                // Получаем позицию курсора для вставки картинки
-                const selection = window.getSelection();
-
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    const container = range.commonAncestorContainer;
-
-                    // Если у нас есть текущее положение курсора
-                    if ($.contains(articlePreview[0], container) || articlePreview[0] === container) {
-                        // Создаем элемент изображения для вставки
-                        const imgHtml = `<img src="${imageData.url}" alt="${imageData.alt}" class="inserted-image" data-id="${imageData.id}">`;
-
-                        // Вставляем изображение
-                        range.deleteContents();
-
-                        // Создаем фрагмент с изображением
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = imgHtml;
-                        const fragment = document.createDocumentFragment();
-
-                        // Добавляем все дочерние узлы из tempDiv в fragment
-                        while (tempDiv.firstChild) {
-                            fragment.appendChild(tempDiv.firstChild);
-                        }
-
-                        range.insertNode(fragment);
-
-                        // Добавляем изображение в выбранные
-                        selectedImages[imageData.id] = {
-                            id: imageData.id,
-                            url: imageData.url,
-                            full: imageData.full,
-                            alt: imageData.alt || imageData.keyword
-                        };
-
-                        // Показываем сообщение о успешной вставке
-                        showNotice('success', 'Изображение добавлено в статью');
-                    } else {
-                        showNotice('error', 'Установите курсор в нужное место в статье перед перетаскиванием изображения');
-                    }
-                } else {
-                    // Если позиция курсора не найдена, добавляем в конец
-                    const imgHtml = `<img src="${imageData.url}" alt="${imageData.alt || imageData.keyword}" class="inserted-image" data-id="${imageData.id}">`;
-                    articlePreview.find('.content-preview').append(imgHtml);
-
-                    // Добавляем изображение в выбранные
-                    selectedImages[imageData.id] = {
-                        id: imageData.id,
-                        url: imageData.url,
-                        full: imageData.full,
-                        alt: imageData.alt || imageData.keyword
-                    };
-
-                    showNotice('success', 'Изображение добавлено в конец статьи');
-                }
-            } catch (error) {
-                showNotice('error', 'Ошибка при обработке перетаскиваемого изображения');
-                console.error('Error parsing image data:', error);
-            }
         });
     }
 
