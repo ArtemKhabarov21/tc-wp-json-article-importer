@@ -135,6 +135,47 @@
         },
 
         // Инициализация действий с изображениями (вставка в текст и установка миниатюры)
+        // Обновление функции setThumbnail в модуле images.js
+
+// Установка выбранного изображения как миниатюры
+        setThumbnail: function(imageData) {
+            // Проверяем, загружено ли изображение в медиабиблиотеку
+            if (imageData.attachment_id) {
+                // Если ID вложения уже есть, просто используем его
+                WPJAI.Images.selectedThumbnail = imageData;
+                const previewHtml = `<img src="${imageData.url}" alt="${imageData.alt}" />`;
+                $('#thumbnail-preview').html(previewHtml);
+                $('#remove-thumbnail').show();
+                WPJAI.Utils.showNotice('success', 'Миниатюра установлена');
+            } else {
+                // Если ID вложения нет, загружаем изображение в медиабиблиотеку
+                WPJAI.Images.uploadToMediaLibrary(imageData.url, imageData.alt)
+                    .then(function(attachmentId) {
+                        // Получаем URL загруженного изображения
+                        return WPJAI.Images.getAttachmentUrl(attachmentId)
+                            .then(function(url) {
+                                // Сохраняем данные о выбранной миниатюре
+                                imageData.attachment_id = attachmentId;
+                                imageData.url = url; // Обновляем URL на локальный
+                                WPJAI.Images.selectedThumbnail = imageData;
+
+                                // Обновляем область предпросмотра миниатюры
+                                const previewHtml = `<img src="${url}" alt="${imageData.alt}" />`;
+                                $('#thumbnail-preview').html(previewHtml);
+
+                                // Показываем кнопку удаления миниатюры
+                                $('#remove-thumbnail').show();
+
+                                WPJAI.Utils.showNotice('success', 'Миниатюра установлена и загружена в медиабиблиотеку');
+                            });
+                    })
+                    .catch(function(error) {
+                        WPJAI.Utils.showNotice('error', 'Ошибка загрузки миниатюры: ' + error.message);
+                    });
+            }
+        },
+
+// Обновленная инициализация действий с изображениями
         initImageActions: function() {
             // Вставка изображения в текст
             $('.image-actions .insert-image').on('click', function() {
@@ -170,21 +211,6 @@
                 $('.image-item').removeClass('is-thumbnail');
                 $item.addClass('is-thumbnail');
             });
-        },
-
-        // Установка выбранного изображения как миниатюры
-        setThumbnail: function(imageData) {
-            // Сохраняем данные о выбранной миниатюре
-            WPJAI.Images.selectedThumbnail = imageData;
-
-            // Обновляем область предпросмотра миниатюры
-            const previewHtml = `<img src="${imageData.url}" alt="${imageData.alt}" />`;
-            $('#thumbnail-preview').html(previewHtml);
-
-            // Показываем кнопку удаления миниатюры
-            $('#remove-thumbnail').show();
-
-            WPJAI.Utils.showNotice('success', 'Миниатюра установлена');
         },
 
         // Очистка выбранной миниатюры

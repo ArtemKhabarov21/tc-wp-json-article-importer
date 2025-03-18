@@ -35,6 +35,12 @@ class WPJAI_Core {
      * Инициализация плагина
      */
     public function init() {
+        // Загрузка файла конфигурации, если он существует
+        $config_file = WPJAI_PLUGIN_DIR . 'includes/config-keys.php';
+        if (file_exists($config_file)) {
+            include_once $config_file;
+        }
+
         // Инициализация административной части
         $admin = new WPJAI_Admin();
         $admin->init();
@@ -52,6 +58,26 @@ class WPJAI_Core {
 
         // Добавление AJAX обработчика для определения SEO плагинов
         add_action('wp_ajax_detect_seo_plugins', array($this, 'ajax_detect_seo_plugins'));
+
+        // Добавляем обработчик для получения информации о ротации ключей API
+        add_action('wp_ajax_get_api_keys_info', array($this, 'ajax_get_api_keys_info'));
+    }
+
+    public function ajax_get_api_keys_info() {
+        // Проверка nonce
+        check_ajax_referer('wp_json_article_importer_nonce', 'nonce');
+
+        // Проверка прав доступа
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Недостаточно прав');
+        }
+
+        $api = new WPJAI_API();
+        $api->init();
+
+        $keys_info = $api->get_keys_rotation_info();
+
+        wp_send_json_success($keys_info);
     }
 
     /**

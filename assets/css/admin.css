@@ -724,3 +724,19 @@
 .thumbnail-status.active .dashicons {
     color: #4CAF50;
 }
+
+.api-keys-info {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.api-keys-status p {
+    margin: 5px 0;
+}
+
+.api-keys-status .error {
+    color: #d63638;
+}

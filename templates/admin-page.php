@@ -139,10 +139,16 @@
                         <p class="description">Укажите URL файла JSON с данными статей.</p>
                     </div>
 
+
                     <div class="form-group">
-                        <label for="api-keys">API ключи Unsplash (через запятую):</label>
-                        <textarea id="api-keys" rows="3" class="large-text"><?php echo esc_textarea($settings['api_keys']); ?></textarea>
-                        <p class="description">Укажите один или несколько API ключей Unsplash через запятую. Ключи будут использоваться по очереди.</p>
+                        <h3>Информация о API-ключах Unsplash</h3>
+                        <div id="api-keys-info" class="api-keys-info">
+                            <p>Загрузка информации о ключах...</p>
+                        </div>
+                        <p class="description">
+                            Здесь отображается информация о текущем состоянии ротации API-ключей Unsplash.
+                            Для каждого запроса используется следующий ключ из списка.
+                        </p>
                     </div>
 
                     <div class="form-group">
@@ -177,6 +183,57 @@ wp_enqueue_editor();
             // Эта функция будет вызвана после загрузки статьи
             // Вся инициализация редактора происходит в WPJAI.Editor.initOrUpdate
             console.log('Статья загружена и редактор инициализирован');
+        });
+    });
+</script>
+
+<script>
+    jQuery(document).ready(function($) {
+        // Функция для получения информации о ротации ключей API
+        function getApiKeysInfo() {
+            $.ajax({
+                url: wp_json_importer.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'get_api_keys_info',
+                    nonce: wp_json_importer.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const info = response.data;
+                        let html = '<div class="api-keys-status">';
+                        html += '<p><strong>Всего ключей:</strong> ' + info.total_keys + '</p>';
+                        html += '<p><strong>Текущий индекс:</strong> ' + info.current_index + '</p>';
+                        html += '<p><strong>Следующий индекс:</strong> ' + info.next_index + '</p>';
+                        html += '<p><strong>Текущий ключ:</strong> ' + info.current_key + '</p>';
+                        html += '</div>';
+
+                        $('#api-keys-info').html(html);
+                    } else {
+                        $('#api-keys-info').html('<p class="error">Ошибка: ' + response.data + '</p>');
+                    }
+                },
+                error: function() {
+                    $('#api-keys-info').html('<p class="error">Произошла ошибка при получении информации о ключах API.</p>');
+                }
+            });
+        }
+
+        // Загружаем информацию при переключении на вкладку настроек
+        $('a[href="#tab-settings"]').on('click', function() {
+            getApiKeysInfo();
+        });
+
+        // Если вкладка настроек активна, загружаем информацию сразу
+        if ($('#tab-settings').hasClass('active')) {
+            getApiKeysInfo();
+        }
+
+        // Обновляем информацию после сохранения настроек
+        $('#settings-form').on('submit', function() {
+            setTimeout(function() {
+                getApiKeysInfo();
+            }, 1000);
         });
     });
 </script>

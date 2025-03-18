@@ -74,6 +74,10 @@
         },
 
         // Функция публикации статьи
+        // Добавляем ID миниатюры в AJAX-запрос в модуле publish.js
+// Замените функцию publishArticle в файле assets/js/modules/publish.js
+
+// Функция публикации статьи
         publishArticle: function() {
             // Сохраняем текущие данные статьи перед публикацией
             WPJAI.Articles.saveCurrentArticleData();
@@ -110,6 +114,12 @@
             const metaDescription = $('#meta-description').val();
             const metaKeywords = $('#meta-keywords').val();
 
+            // Получаем ID миниатюры из выбранной миниатюры
+            let thumbnailId = 0;
+            if (WPJAI.Images.selectedThumbnail && WPJAI.Images.selectedThumbnail.attachment_id) {
+                thumbnailId = WPJAI.Images.selectedThumbnail.attachment_id;
+            }
+
             // Удаляем любые проблемные теги из контента
             contentHtml = contentHtml.replace(/<userStyle>.*?<\/userStyle>/g, '');
 
@@ -136,6 +146,7 @@
                             meta_title: metaTitle,
                             meta_description: metaDescription,
                             meta_keywords: metaKeywords,
+                            thumbnail_id: thumbnailId, // Добавляем ID миниатюры
                             seo_plugins: WPJAI.data.seoPlugins || []
                         },
                         success: function(response) {

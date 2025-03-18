@@ -7,12 +7,19 @@ class WPJAI_API {
     private $api_keys = [];
     // Текущий индекс API ключа
     private $current_key_index = 0;
+    // Ключ для хранения индекса в опциях
+    private $key_index_option = 'wpjai_current_key_index';
+
     /**
      * Инициализация класса
      */
     public function init() {
         // Загрузка API ключей
         $this->load_api_keys();
+
+        // Загрузка текущего индекса из опций WordPress
+        $this->current_key_index = get_option($this->key_index_option, 0);
+
         // Регистрация обработчиков AJAX
         add_action('wp_ajax_fetch_json_articles', array($this, 'ajax_fetch_json_articles'));
         add_action('wp_ajax_fetch_unsplash_images', array($this, 'ajax_fetch_unsplash_images'));
@@ -20,16 +27,32 @@ class WPJAI_API {
         add_action('wp_ajax_save_plugin_settings', array($this, 'ajax_save_plugin_settings'));
         add_action('wp_ajax_get_plugin_settings', array($this, 'ajax_get_plugin_settings'));
     }
+
     /**
      * Загрузка API ключей
      */
     private function load_api_keys() {
+        // Сначала проверяем наличие файла конфигурации с ключами
+        $config_file = WPJAI_PLUGIN_DIR . 'includes/config-keys.php';
+
+        if (file_exists($config_file)) {
+            include $config_file;
+
+            if (isset($unsplash_api_keys) && is_array($unsplash_api_keys) && !empty($unsplash_api_keys)) {
+                $this->api_keys = $unsplash_api_keys;
+                return;
+            }
+        }
+
+        // Если файла нет или он пустой, загружаем из настроек
         $core = WPJAI_Core::get_instance();
         $settings = $core->get_settings();
+
         if (!empty($settings['api_keys'])) {
             $this->api_keys = array_map('trim', explode(',', $settings['api_keys']));
         }
     }
+
     /**
      * Получение следующего API ключа с ротацией
      */
@@ -37,11 +60,40 @@ class WPJAI_API {
         if (empty($this->api_keys)) {
             return '';
         }
+
+        // Получаем текущий ключ
         $key = $this->api_keys[$this->current_key_index];
+
         // Увеличиваем индекс для следующего вызова
         $this->current_key_index = ($this->current_key_index + 1) % count($this->api_keys);
+
+        // Сохраняем новый индекс в опции WordPress для персистентности
+        update_option($this->key_index_option, $this->current_key_index);
+
         return $key;
     }
+
+    /**
+     * Получение всех API ключей
+     */
+    public function get_all_api_keys() {
+        return $this->api_keys;
+    }
+
+    /**
+     * Получение информации о текущем состоянии ротации ключей
+     */
+    public function get_keys_rotation_info() {
+        return array(
+            'total_keys' => count($this->api_keys),
+            'current_index' => $this->current_key_index,
+            'next_index' => ($this->current_key_index + 1) % count($this->api_keys),
+            'current_key' => !empty($this->api_keys) ?
+                substr($this->api_keys[$this->current_key_index], 0, 4) . '...' .
+                substr($this->api_keys[$this->current_key_index], -4) : '',
+        );
+    }
+
     /**
      * AJAX: Загрузка статей из JSON
      */
