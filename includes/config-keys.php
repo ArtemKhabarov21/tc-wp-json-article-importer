@@ -5,7 +5,6 @@
  * Путь: includes/config-keys.php
  */
 
-// Массив API-ключей Unsplash
 $unsplash_api_keys = array(
     'KdfyxxKfkUFqNBcD2Oj-7VjN-WrGHjgeW73VBkhGam0',
     '5UFT9pnzfMG5VpJP1KL1Sg6M4JISW5OnVT7eBMyfliw',

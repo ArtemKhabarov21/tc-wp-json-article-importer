@@ -4,39 +4,29 @@
 (function($) {
     'use strict';
 
-    // Создаем модуль статей в глобальном объекте WPJAI
     WPJAI.Articles = {
-        // Инициализация модуля
         init: function() {
-            // Инициализация обработчиков событий
             this.initEventHandlers();
             this.initMetaFields();
         },
 
-        // Инициализация обработчиков событий
         initEventHandlers: function() {
-            // Загрузка статей из JSON по URL
             $('#fetch-json').on('click', this.fetchJsonFromUrl);
 
-            // Обработка выбора локального файла
             $('#select-local-json').on('click', function() {
                 $('#local-json-file').click();
             });
 
             $('#local-json-file').on('change', this.handleLocalJsonFile);
 
-            // Переключение между статьями
             $('#prev-article').on('click', this.prevArticle);
             $('#next-article').on('click', this.nextArticle);
         },
 
-        // Инициализация полей мета-информации
         initMetaFields: function() {
-            // Добавляем счетчики символов для мета-полей
             $('#meta-title').after('<div class="char-count">0/60</div>');
             $('#meta-description').after('<div class="char-count">0/160</div>');
 
-            // Обработчики для подсчета символов
             $('#meta-title').on('input', function() {
                 const length = $(this).val().length;
                 const $counter = $(this).next('.char-count');
@@ -62,7 +52,6 @@
             });
         },
 
-        // Загрузка статей из JSON по URL
         fetchJsonFromUrl: function() {
             const jsonFileUrl = $('#json-file-url').val();
 
@@ -87,14 +76,11 @@
                         WPJAI.data.articles = response.data.count;
                         WPJAI.data.currentArticleIndex = 0;
 
-                        // Показываем навигацию и первую статью
                         $('.article-navigation').show();
                         $('#article-counter').text(`Статья 1 из ${WPJAI.data.articles}`);
 
-                        // Отображаем первую статью
                         WPJAI.Articles.displayArticle(response.data.first_article);
 
-                        // Показываем блоки с изображениями и настройками публикации
                         $('.preview-container').show();
 
                         WPJAI.Utils.showNotice('success', `Загружено ${WPJAI.data.articles} статей из JSON файла.`);
@@ -109,13 +95,11 @@
             });
         },
 
-        // Обработка выбора локального файла
         handleLocalJsonFile: function() {
             if (this.files.length > 0) {
                 const fileName = this.files[0].name;
                 $('#selected-filename').text(fileName);
 
-                // Создаем объект FormData для отправки файла
                 const formData = new FormData();
                 formData.append('action', 'fetch_json_articles');
                 formData.append('nonce', wp_json_importer.nonce);
@@ -142,10 +126,8 @@
                             $('.article-navigation').show();
                             $('#article-counter').text(`Статья 1 из ${WPJAI.data.articles}`);
 
-                            // Отображаем первую статью
                             WPJAI.Articles.displayArticle(response.data.first_article);
 
-                            // Показываем блок с изображениями
                             $('.preview-container').show();
 
                             WPJAI.Utils.showNotice('success', `Загружено ${WPJAI.data.articles} статей из локального JSON файла.`);
@@ -180,18 +162,15 @@
         },
 
         saveCurrentArticleData: function() {
-            // Получаем текущий индекс статьи
+
             const currentIndex = WPJAI.data.currentArticleIndex;
 
-            // Если статьи еще не загружены, выходим
             if (!WPJAI.data.loadedArticles || !WPJAI.data.loadedArticles[currentIndex]) {
                 return;
             }
 
-            // Сохраняем контент редактора
             WPJAI.data.loadedArticles[currentIndex].content = WPJAI.Editor.getContent();
 
-            // Сохраняем значения мета-полей
             WPJAI.data.loadedArticles[currentIndex].h1 = $('#article-title').val();
 
             if (!WPJAI.data.loadedArticles[currentIndex].meta) {
@@ -202,7 +181,6 @@
             WPJAI.data.loadedArticles[currentIndex].meta.description = $('#meta-description').val();
             WPJAI.data.loadedArticles[currentIndex].meta.keywords = $('#meta-keywords').val();
 
-            // Сохраняем данные о выбранной миниатюре
             WPJAI.data.loadedArticles[currentIndex].thumbnail = WPJAI.Images.selectedThumbnail;
         },
 
@@ -216,25 +194,21 @@
                     index: index
                 },
                 beforeSend: function() {
-                    // Не удаляем контент редактора, просто показываем индикатор загрузки
                     if (!WPJAI.data.editorInitialized) {
                         $('.article-preview').html('<div class="no-article"><p>Загрузка статьи...</p></div>');
                     }
                 },
                 success: function(response) {
                     if (response.success) {
-                        // Если это первая загрузка, инициализируем массив для хранения статей
                         if (!WPJAI.data.loadedArticles) {
                             WPJAI.data.loadedArticles = [];
                         }
 
-                        // Сохраняем статью в массив
                         WPJAI.data.loadedArticles[index] = response.data.article;
 
                         WPJAI.Articles.displayArticle(response.data.article);
                         $('#article-counter').text(`Статья ${index + 1} из ${WPJAI.data.articles}`);
 
-                        // Очищаем поисковый запрос
                         $('#unsplash-search').val('');
                     } else {
                         WPJAI.Utils.showNotice('error', `Ошибка: ${response.data}`);
@@ -252,14 +226,12 @@
                 return;
             }
 
-            // Заполняем поля мета-информации и заголовка
             $('#article-title').val(article.h1 || '');
 
             if (article.meta) {
                 $('#meta-title').val(article.meta.title || '').trigger('input');
                 $('#meta-description').val(article.meta.description || '').trigger('input');
 
-                // Обработка ключевых слов (могут быть как строкой, так и массивом)
                 let keywords = '';
                 if (article.meta.keywords) {
                     if (Array.isArray(article.meta.keywords)) {
@@ -275,35 +247,29 @@
                 $('#meta-keywords').val('');
             }
 
-            // Подготавливаем контент для редактора (без H1)
             let content = article.content || '';
 
-            // Удаляем любые потенциальные теги стилей или другие нежелательные теги
             content = content.replace(/<userStyle>.*?<\/userStyle>/g, '');
 
             setTimeout(function() {
                 WPJAI.Editor.initOrUpdate(content);
             }, 100);
 
-            // Очищаем результаты предыдущего поиска изображений
             $('#unsplash-results').empty();
             $('#keywords-tags').empty();
 
-            // Восстанавливаем выбранную миниатюру, если она была сохранена
             if (article.thumbnail) {
                 WPJAI.Images.setThumbnail(article.thumbnail);
             } else {
                 WPJAI.Images.clearThumbnail();
             }
 
-            // Получаем ключевые слова для поиска изображений
             if (article.meta && article.meta.keywords) {
                 const keywords = Array.isArray(article.meta.keywords)
                     ? article.meta.keywords
                     : article.meta.keywords.split(',');
 
                 if (keywords.length > 0) {
-                    // Отображаем ключевые слова в виде тегов
                     let keywordsHtml = '<div class="keywords-title">Ключевые слова для поиска:</div>';
                     keywordsHtml += '<div class="keywords-list">';
 
@@ -317,14 +283,12 @@
                     keywordsHtml += '</div>';
                     $('#keywords-tags').html(keywordsHtml);
 
-                    // Автоматический поиск изображений по первому ключевому слову
                     const firstKeyword = keywords[0].trim().replace(/,\s*$/, '');
                     if (firstKeyword) {
                         $('#unsplash-search').val(firstKeyword);
                         WPJAI.Images.searchUnsplash(firstKeyword);
                     }
 
-                    // Обработчик клика по тегу для поиска
                     $('.keyword-tag').on('click', function() {
                         const keyword = $(this).data('keyword');
                         $('#unsplash-search').val(keyword);
@@ -333,18 +297,14 @@
                 }
             }
 
-            // Показываем контейнер с превью статьи
             $('.preview-container').show();
 
-            // Установка типа контента по умолчанию из настроек
             if (WPJAI.data.defaultPostType && !WPJAI.data.postTypeSet) {
                 $('#post-type').val(WPJAI.data.defaultPostType);
-                // Вызываем событие change для правильного отображения зависимых полей
                 $('#post-type').trigger('change');
                 WPJAI.data.postTypeSet = true;
             }
 
-            // Триггерим событие для оповещения других компонентов о загрузке статьи
             $(document).trigger('article_loaded', [article]);
         }
     };

@@ -4,20 +4,14 @@
 (function($) {
     'use strict';
 
-    // Создаем модуль публикации в глобальном объекте WPJAI
     WPJAI.Publish = {
-        // Инициализация модуля
         init: function() {
-            // Инициализация обработчиков событий
             this.initEventHandlers();
 
-            // Получение информации о доступных SEO плагинах
             this.detectSeoPlugins();
         },
 
-        // Инициализация обработчиков событий
         initEventHandlers: function() {
-            // Обработчик для выбора типа поста (пост/страница)
             $('#post-type').on('change', function() {
                 if ($(this).val() === 'post') {
                     $('.post-category-option').show();
@@ -26,7 +20,6 @@
                 }
             });
 
-            // Обработка изменения статуса публикации
             $('#post-status').on('change', function() {
                 const status = $(this).val();
 
@@ -37,11 +30,9 @@
                 }
             });
 
-            // Публикация статьи
             $('#publish-article').on('click', this.publishArticle);
         },
 
-        // Обнаружение установленных SEO плагинов
         detectSeoPlugins: function() {
             $.ajax({
                 url: wp_json_importer.ajax_url,
@@ -73,13 +64,7 @@
             });
         },
 
-        // Функция публикации статьи
-        // Добавляем ID миниатюры в AJAX-запрос в модуле publish.js
-// Замените функцию publishArticle в файле assets/js/modules/publish.js
-
-// Функция публикации статьи
         publishArticle: function() {
-            // Сохраняем текущие данные статьи перед публикацией
             WPJAI.Articles.saveCurrentArticleData();
 
             const postStatus = $('#post-status').val();
@@ -95,41 +80,34 @@
                 }
             }
 
-            // Получаем заголовок статьи
             const title = $('#article-title').val();
             if (!title) {
                 WPJAI.Utils.showNotice('error', 'Заголовок статьи не может быть пустым.');
                 return;
             }
 
-            // Получаем HTML-контент из редактора TinyMCE
             let contentHtml = WPJAI.Editor.getContent();
             if (!contentHtml) {
                 WPJAI.Utils.showNotice('error', 'Контент статьи не может быть пустым.');
                 return;
             }
 
-            // Получаем мета-данные
             const metaTitle = $('#meta-title').val();
             const metaDescription = $('#meta-description').val();
             const metaKeywords = $('#meta-keywords').val();
 
-            // Получаем ID миниатюры из выбранной миниатюры
             let thumbnailId = 0;
             if (WPJAI.Images.selectedThumbnail && WPJAI.Images.selectedThumbnail.attachment_id) {
                 thumbnailId = WPJAI.Images.selectedThumbnail.attachment_id;
             }
 
-            // Удаляем любые проблемные теги из контента
             contentHtml = contentHtml.replace(/<userStyle>.*?<\/userStyle>/g, '');
 
             $('#publish-article').prop('disabled', true).text('Публикация...');
             WPJAI.Utils.showNotice('info', 'Создание публикации...');
 
-            // Сначала обрабатываем и загружаем все изображения
             WPJAI.Images.processContentImages(contentHtml)
                 .then(function(processedContent) {
-                    // После обработки изображений отправляем данные на сервер
                     $.ajax({
                         url: wp_json_importer.ajax_url,
                         type: 'POST',
@@ -155,23 +133,17 @@
                             if (response.success) {
                                 WPJAI.Utils.showNotice('success', `Публикация успешно создана! <a href="${response.data.edit_url}" target="_blank">Редактировать</a> | <a href="${response.data.view_url}" target="_blank">Просмотреть</a>`);
 
-                                // Если есть еще статьи, переходим к следующей
                                 if (response.data.has_next) {
-                                    // Обновляем счетчик статей
                                     WPJAI.data.articles--;
                                     $('#article-counter').text(`Статья 1 из ${WPJAI.data.articles}`);
 
-                                    // Сбрасываем сохраненное содержимое редактора
                                     WPJAI.data.lastEditorContent = '';
 
-                                    // Отображаем следующую статью
                                     WPJAI.Articles.displayArticle(response.data.next_article);
                                 } else {
-                                    // Все статьи опубликованы
                                     $('.preview-container').hide();
                                     $('.article-navigation').hide();
 
-                                    // Удаляем редактор
                                     WPJAI.Editor.destroy();
 
                                     WPJAI.Utils.showNotice('success', 'Все статьи опубликованы.');

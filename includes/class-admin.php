@@ -4,17 +4,15 @@
  */
 
 class WPJAI_Admin {
+
     /**
      * Инициализация класса
      */
     public function init() {
-        // Добавление пунктов меню
         add_action('admin_menu', array($this, 'add_admin_menu'));
 
-        // Загрузка скриптов и стилей
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
 
-        // Обработка загрузки локального JSON файла
         add_action('admin_init', array($this, 'handle_local_json_upload'));
     }
 
@@ -33,19 +31,15 @@ class WPJAI_Admin {
         );
     }
 
-    /**
-     * Подключение скриптов и стилей для админки
-     */
+
     /**
      * Функция подключения скриптов и стилей для административной панели
      */
     public function enqueue_admin_scripts($hook) {
-        // Загружаем скрипты только на странице плагина
         if ('toplevel_page_wp-json-article-importer' !== $hook) {
             return;
         }
 
-        // Подключение стилей
         wp_enqueue_style(
             'wp-json-article-importer-css',
             WPJAI_PLUGIN_URL . 'assets/css/admin.css',
@@ -53,10 +47,8 @@ class WPJAI_Admin {
             WPJAI_VERSION
         );
 
-        // Подключение редактора WordPress
         wp_enqueue_editor();
 
-        // Основной файл
         wp_register_script(
             'wp-json-article-importer-js',
             WPJAI_PLUGIN_URL . 'assets/js/admin.js',
@@ -65,7 +57,6 @@ class WPJAI_Admin {
             true
         );
 
-        // Модули
         wp_register_script(
             'wp-json-article-importer-utils',
             WPJAI_PLUGIN_URL . 'assets/js/modules/utils.js',
@@ -114,7 +105,6 @@ class WPJAI_Admin {
             true
         );
 
-        // Подключение скриптов в правильном порядке
         wp_enqueue_script('wp-json-article-importer-js');
         wp_enqueue_script('wp-json-article-importer-utils');
         wp_enqueue_script('wp-json-article-importer-editor');
@@ -123,7 +113,6 @@ class WPJAI_Admin {
         wp_enqueue_script('wp-json-article-importer-publish');
         wp_enqueue_script('wp-json-article-importer-settings');
 
-        // Локализация скрипта
         wp_localize_script('wp-json-article-importer-js', 'wp_json_importer', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('wp_json_article_importer_nonce'),
@@ -134,12 +123,10 @@ class WPJAI_Admin {
      * Отображение страницы администратора
      */
     public function render_admin_page() {
-        // Проверка прав доступа
         if (!current_user_can('manage_options')) {
             return;
         }
 
-        // Получение настроек
         $core = WPJAI_Core::get_instance();
         $settings = $core->get_settings();
 
@@ -150,7 +137,6 @@ class WPJAI_Admin {
      * Обработка загрузки локального JSON файла
      */
     public function handle_local_json_upload() {
-        // Проверка прав доступа
         if (!current_user_can('manage_options')) {
             return;
         }
@@ -199,7 +185,6 @@ class WPJAI_Admin {
                 return;
             }
 
-            // Сохраняем статьи в сессии
             set_transient('wp_json_article_importer_articles', $data['articles'], 12 * HOUR_IN_SECONDS);
 
             add_settings_error(

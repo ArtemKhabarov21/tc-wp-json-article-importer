@@ -167,21 +167,13 @@
     </div>
 </div>
 
-<!-- Подключаем TinyMCE для редактирования контента -->
 <?php
-// Подключаем редактор WordPress
 wp_enqueue_editor();
 ?>
 
 <script>
     jQuery(document).ready(function($) {
-        // Удаляем прямую инициализацию TinyMCE здесь - она будет происходить через WPJAI.Editor.initOrUpdate
-        // когда загрузится статья
-
-        // Вместо этого просто следим за событием загрузки статьи
         $(document).on('article_loaded', function() {
-            // Эта функция будет вызвана после загрузки статьи
-            // Вся инициализация редактора происходит в WPJAI.Editor.initOrUpdate
             console.log('Статья загружена и редактор инициализирован');
         });
     });
@@ -189,7 +181,6 @@ wp_enqueue_editor();
 
 <script>
     jQuery(document).ready(function($) {
-        // Функция для получения информации о ротации ключей API
         function getApiKeysInfo() {
             $.ajax({
                 url: wp_json_importer.ajax_url,
@@ -219,17 +210,14 @@ wp_enqueue_editor();
             });
         }
 
-        // Загружаем информацию при переключении на вкладку настроек
         $('a[href="#tab-settings"]').on('click', function() {
             getApiKeysInfo();
         });
 
-        // Если вкладка настроек активна, загружаем информацию сразу
         if ($('#tab-settings').hasClass('active')) {
             getApiKeysInfo();
         }
 
-        // Обновляем информацию после сохранения настроек
         $('#settings-form').on('submit', function() {
             setTimeout(function() {
                 getApiKeysInfo();

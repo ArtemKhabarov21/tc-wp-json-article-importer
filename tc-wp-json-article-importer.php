@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugin Name: WP JSON Article Importer
+ * Plugin Name: TC WP JSON Article Importer
  * Plugin URI:
  * Description: Импорт статей из JSON файла с добавлением изображений через Unsplash API
  * Version: 1.0.0
- * Author:
+ * Author: Artem Khabarov
  * Author URI:
- * Text Domain: wp-json-article-importer
+ * Text Domain: TC wp-json-article-importer
  */
 
 if (!defined('ABSPATH')) {

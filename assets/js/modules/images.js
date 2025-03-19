@@ -175,9 +175,7 @@
             }
         },
 
-// Обновленная инициализация действий с изображениями
         initImageActions: function() {
-            // Вставка изображения в текст
             $('.image-actions .insert-image').on('click', function() {
                 const $img = $(this).closest('.image-item').find('img');
                 const imageUrl = $img.data('url');
@@ -189,12 +187,10 @@
                 }
             });
 
-            // Установка изображения как миниатюры
             $('.image-actions .set-thumbnail').on('click', function() {
                 const $item = $(this).closest('.image-item');
                 const $img = $item.find('img');
 
-                // Получаем данные изображения
                 const imageData = {
                     id: $img.data('id'),
                     url: $img.data('url'),
@@ -204,36 +200,26 @@
                     keyword: $img.data('keyword')
                 };
 
-                // Устанавливаем миниатюру
                 WPJAI.Images.setThumbnail(imageData);
 
-                // Отмечаем выбранное изображение
                 $('.image-item').removeClass('is-thumbnail');
                 $item.addClass('is-thumbnail');
             });
         },
 
-        // Очистка выбранной миниатюры
         clearThumbnail: function() {
-            // Сбрасываем данные о выбранной миниатюре
             WPJAI.Images.selectedThumbnail = null;
 
-            // Очищаем область предпросмотра миниатюры
             $('#thumbnail-preview').html('<p class="no-thumbnail">Миниатюра не выбрана</p>');
 
-            // Скрываем кнопку удаления миниатюры
             $('#remove-thumbnail').hide();
 
-            // Снимаем отметку с выбранного изображения
             $('.image-item').removeClass('is-thumbnail');
         },
 
-        // Функция для отображения контекстного меню с выбором изображений
         showContextMenu: function(x, y, editor) {
-            // Удаляем предыдущее меню, если оно существует
             $('#image-context-menu').remove();
 
-            // Получаем все доступные изображения из галереи Unsplash
             let images = [];
             $('#unsplash-results .image-item img').each(function() {
                 images.push({
@@ -245,18 +231,15 @@
                 });
             });
 
-            // Если изображений нет, показываем сообщение
             if (images.length === 0) {
                 alert('Нет доступных изображений. Выполните поиск изображений.');
                 return;
             }
 
-            // Создаем меню
             let menuHtml = '<div id="image-context-menu" style="position:fixed; z-index:1000; background:#fff; border:1px solid #ccc; box-shadow:0 2px 5px rgba(0,0,0,0.2); padding:10px; width:300px; max-height:400px; overflow-y:auto;">';
             menuHtml += '<h3>Вставить изображение</h3>';
             menuHtml += '<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:5px;">';
 
-            // Добавляем все доступные изображения
             $.each(images, function(index, image) {
                 menuHtml += `
                     <div style="cursor:pointer; border:1px solid #ddd;" class="context-menu-image" 
@@ -270,35 +253,28 @@
             menuHtml += '<div style="margin-top:10px; text-align:right;"><button class="button button-secondary close-context-menu">Отмена</button></div>';
             menuHtml += '</div>';
 
-            // Добавляем меню в DOM
             $('body').append(menuHtml);
 
-            // Позиционируем меню
             $('#image-context-menu').css({
                 left: x + 'px',
                 top: y + 'px'
             });
 
-            // Обработчик клика по изображению
             $('.context-menu-image').on('click', function() {
                 const url = $(this).data('url');
                 const alt = $(this).data('alt');
 
-                // Вставляем изображение в редактор
                 if (editor) {
                     editor.insertContent(`<img src="${url}" alt="${alt}" />`);
                 }
 
-                // Закрываем меню
                 $('#image-context-menu').remove();
             });
 
-            // Обработчик закрытия меню
             $('.close-context-menu').on('click', function() {
                 $('#image-context-menu').remove();
             });
 
-            // Закрываем меню при клике вне его
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('#image-context-menu').length) {
                     $('#image-context-menu').remove();
@@ -306,31 +282,23 @@
             });
         },
 
-        // Предварительная обработка изображений в контенте перед публикацией
         processContentImages: async function(content) {
-            // Создаем временный DOM для обработки изображений
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = content;
 
-            // Находим все изображения в контенте
             const images = tempDiv.querySelectorAll('img');
 
-            // Обрабатываем каждое изображение
             for(let i = 0; i < images.length; i++) {
                 const img = images[i];
                 const src = img.getAttribute('src');
 
-                // Проверяем, является ли это внешним URL (например, из Unsplash)
                 if(src && src.startsWith('http') && !src.includes(window.location.hostname)) {
                     try {
-                        // Загружаем изображение в медиабиблиотеку WordPress
                         const uploadedId = await WPJAI.Images.uploadToMediaLibrary(src, img.getAttribute('alt') || '');
 
                         if(uploadedId && uploadedId > 0) {
-                            // Получаем URL загруженного изображения
                             const newSrc = await WPJAI.Images.getAttachmentUrl(uploadedId);
 
-                            // Обновляем атрибуты изображения
                             img.setAttribute('src', newSrc);
                             img.setAttribute('data-id', uploadedId);
                             img.classList.add('wp-image-' + uploadedId);
@@ -341,11 +309,9 @@
                 }
             }
 
-            // Возвращаем обновленный HTML
             return tempDiv.innerHTML;
         },
 
-        // Загрузка изображения в медиабиблиотеку
         uploadToMediaLibrary: function(url, alt_text) {
             return new Promise((resolve, reject) => {
                 $.ajax({
@@ -371,7 +337,6 @@
             });
         },
 
-        // Получение URL вложения по ID
         getAttachmentUrl: function(attachmentId) {
             return new Promise((resolve, reject) => {
                 $.ajax({

@@ -37,13 +37,11 @@
     font-weight: 600;
 }
 
-/* Основной контейнер превью и изображений */
 .preview-container {
     display: flex;
     margin: 20px 0;
 }
 
-/* Панель предпросмотра статьи (левая колонка) */
 .preview-panel {
     flex: 2;
     background: #fff;
@@ -180,7 +178,6 @@
     text-align: center;
 }
 
-/* Стили для тегов ключевых слов */
 .keywords-tags {
     margin-bottom: 15px;
 }
@@ -212,7 +209,6 @@
     background-color: #d1ebf5;
 }
 
-/* Результаты поиска изображений */
 .image-results {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -265,7 +261,6 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* Навигация по статьям */
 .article-navigation {
     display: flex;
     justify-content: space-between;
@@ -277,7 +272,6 @@
     font-weight: 600;
 }
 
-/* Настройки публикации */
 .publish-options {
     margin-top: 20px;
     padding: 15px;
@@ -306,7 +300,6 @@
     color: #777;
 }
 
-/* Адаптивность */
 @media screen and (max-width: 782px) {
     .importer-container {
         flex-direction: column;
@@ -331,7 +324,6 @@
     }
 }
 
-/* Стили для модального окна вставки изображений */
 .image-insert-modal {
     position: fixed;
     z-index: 1000;
@@ -425,8 +417,6 @@
 .image-item.selected {
     border: 3px solid #0073a1;
 }
-
-/* Стили для размещения изображений */
 .wp-block-image.alignleft {
     float: left;
     margin-right: 1em;
@@ -461,9 +451,6 @@
     max-width: 100%;
 }
 
-/* Добавить в assets/css/admin.css */
-
-/* Стили для блока метаданных статьи */
 .article-metadata {
     background: #f9f9f9;
     border: 1px solid #e5e5e5;
@@ -500,7 +487,6 @@
     margin-top: 4px;
 }
 
-/* Счетчик символов */
 .char-count {
     font-size: 11px;
     color: #666;
@@ -512,7 +498,6 @@
     color: #d63638;
 }
 
-/* Улучшения для полей метаинформации */
 .meta-fields {
     position: relative;
 }
@@ -523,7 +508,6 @@
     box-shadow: 0 0 0 1px #2271b1;
 }
 
-/* Подсказки с превью */
 .seo-preview {
     margin-top: 10px;
     padding: 10px;
@@ -554,7 +538,6 @@
     line-height: 1.4;
 }
 
-/* Стили для блока миниатюры */
 .selected-thumbnail {
     margin-bottom: 20px;
     background: #f8f8f8;
@@ -617,7 +600,6 @@
     text-align: center;
 }
 
-/* Стили для изображений, которые можно выбрать как миниатюру */
 .image-item {
     position: relative;
 }
@@ -673,9 +655,6 @@
     z-index: 10;
 }
 
-/* Добавить в assets/css/admin.css */
-
-/* Подключаем иконки WordPress Dashicons */
 .image-actions button .dashicons {
     width: 20px;
     height: 20px;
@@ -684,7 +663,6 @@
     vertical-align: middle;
 }
 
-/* Иконки для действий */
 .dashicons-editor-paste-text {
     color: #fff;
 }
@@ -696,13 +674,10 @@
 .dashicons-yes {
     color: #4CAF50;
 }
-
-/* Украшения для кнопок */
 .image-actions button:hover .dashicons {
     color: #00a0d2;
 }
 
-/* Иконки для статуса миниатюры */
 .thumbnail-status {
     margin-top: 5px;
     font-size: 12px;

@@ -4,21 +4,15 @@
 (function($) {
     'use strict';
 
-    // Создаем модуль настроек в глобальном объекте WPJAI
     WPJAI.Settings = {
-        // Инициализация модуля
         init: function() {
-            // Инициализация обработчиков событий
             this.initEventHandlers();
         },
 
-        // Инициализация обработчиков событий
         initEventHandlers: function() {
-            // Обработчик сохранения настроек
             $('#settings-form').on('submit', this.saveSettings);
         },
 
-        // Функция сохранения настроек
         saveSettings: function(e) {
             e.preventDefault();
 
@@ -59,7 +53,6 @@
             });
         },
 
-        // Получение текущих настроек
         getSettings: function(callback) {
             $.ajax({
                 url: wp_json_importer.ajax_url,
@@ -80,8 +73,6 @@
                 }
             });
         },
-
-        // Установка значений в форму настроек
         populateSettingsForm: function(settings) {
             if (settings) {
                 $('#json-file-url').val(settings.json_file_url || '');

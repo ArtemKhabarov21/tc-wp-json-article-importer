@@ -5,10 +5,8 @@
 (function($) {
     'use strict';
 
-    // Создаем глобальный объект плагина, если он еще не существует
     window.WPJAI = window.WPJAI || {};
 
-    // Создаем объект для хранения данных плагина
     WPJAI.data = {
         articles: [],
         currentArticleIndex: 0,
@@ -18,11 +16,8 @@
         postTypeSet: false
     };
 
-    // Инициализация плагина
     WPJAI.init = function() {
-        // Инициализируем модули только на странице плагина
         $(document).ready(function() {
-            // Инициализация модулей
             if (typeof WPJAI.Editor !== 'undefined' && WPJAI.Editor.init) {
                 WPJAI.Editor.init();
             }
@@ -43,36 +38,29 @@
                 WPJAI.Settings.init();
             }
 
-            // Инициализация вкладок
             WPJAI.initTabs();
 
-            // Установка начального значения даты публикации
             WPJAI.setInitialScheduleDate();
         });
     };
 
-    // Инициализация вкладок
     WPJAI.initTabs = function() {
         $('.nav-tab').on('click', function(e) {
             e.preventDefault();
 
-            // Удаляем активный класс со всех вкладок
             $('.nav-tab').removeClass('nav-tab-active');
             $('.tab-pane').removeClass('active');
 
-            // Добавляем активный класс текущей вкладке
             $(this).addClass('nav-tab-active');
 
-            // Показываем соответствующую панель
             const target = $(this).attr('href');
             $(target).addClass('active');
         });
     };
 
-    // Установка начальной даты публикации
     WPJAI.setInitialScheduleDate = function() {
         const now = new Date();
-        now.setMinutes(now.getMinutes() + 5); // Добавляем 5 минут к текущему времени
+        now.setMinutes(now.getMinutes() + 5);
 
         const year = now.getFullYear();
         const month = (now.getMonth() + 1).toString().padStart(2, '0');

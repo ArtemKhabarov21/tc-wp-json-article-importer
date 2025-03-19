@@ -41,15 +41,12 @@ class WPJAI_Core {
             include_once $config_file;
         }
 
-        // Инициализация административной части
         $admin = new WPJAI_Admin();
         $admin->init();
 
-        // Инициализация API части
         $api = new WPJAI_API();
         $api->init();
 
-        // Инициализация работы с постами
         $posts = new WPJAI_Posts();
         $posts->init();
 
@@ -64,10 +61,8 @@ class WPJAI_Core {
     }
 
     public function ajax_get_api_keys_info() {
-        // Проверка nonce
         check_ajax_referer('wp_json_article_importer_nonce', 'nonce');
 
-        // Проверка прав доступа
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Недостаточно прав');
         }
@@ -110,13 +105,11 @@ class WPJAI_Core {
      * Действия при активации плагина
      */
     public function activate() {
-        // Проверяем, установлены ли начальные настройки
         if (!get_option('wp_json_article_importer_settings')) {
-            // Устанавливаем настройки по умолчанию
             add_option('wp_json_article_importer_settings', array(
                 'json_file_url' => '',
-                'api_keys' =>  'KdfyxxKfkUFqNBcD2Oj-7VjN-WrGHjgeW73VBkhGam0', //'VKikqorzQ57Wt305oVCfGvi-KIWFKfvo2cDW7-pPY_M',
-                'default_post_type' => 'page', // По умолчанию страницы, а не посты
+                'api_keys' =>  'KdfyxxKfkUFqNBcD2Oj-7VjN-WrGHjgeW73VBkhGam0',
+                'default_post_type' => 'page',
             ));
         }
     }
@@ -155,22 +148,18 @@ class WPJAI_Core {
     private function get_active_seo_plugins() {
         $seo_plugins = array();
 
-        // Yoast SEO
         if (is_plugin_active('wordpress-seo/wp-seo.php')) {
             $seo_plugins[] = 'yoast';
         }
 
-        // SEO Framework
         if (is_plugin_active('autodescription/autodescription.php')) {
             $seo_plugins[] = 'seo_framework';
         }
 
-        // CDS Simple SEO
         if (is_plugin_active('cds-simple-seo/cds-simple-seo.php')) {
             $seo_plugins[] = 'cds_simple_seo';
         }
 
-        // SEOPress
         if (is_plugin_active('wp-seopress/seopress.php')) {
             $seo_plugins[] = 'seopress';
         }

@@ -3,24 +3,19 @@
  * Работа с API для плагина WP JSON Article Importer
  */
 class WPJAI_API {
-    // Хранение API ключей Unsplash
     private $api_keys = [];
-    // Текущий индекс API ключа
     private $current_key_index = 0;
-    // Ключ для хранения индекса в опциях
     private $key_index_option = 'wpjai_current_key_index';
 
     /**
      * Инициализация класса
      */
     public function init() {
-        // Загрузка API ключей
+
         $this->load_api_keys();
 
-        // Загрузка текущего индекса из опций WordPress
         $this->current_key_index = get_option($this->key_index_option, 0);
 
-        // Регистрация обработчиков AJAX
         add_action('wp_ajax_fetch_json_articles', array($this, 'ajax_fetch_json_articles'));
         add_action('wp_ajax_fetch_unsplash_images', array($this, 'ajax_fetch_unsplash_images'));
         add_action('wp_ajax_get_article_by_index', array($this, 'ajax_get_article_by_index'));
@@ -32,7 +27,7 @@ class WPJAI_API {
      * Загрузка API ключей
      */
     private function load_api_keys() {
-        // Сначала проверяем наличие файла конфигурации с ключами
+
         $config_file = WPJAI_PLUGIN_DIR . 'includes/config-keys.php';
 
         if (file_exists($config_file)) {
@@ -44,7 +39,6 @@ class WPJAI_API {
             }
         }
 
-        // Если файла нет или он пустой, загружаем из настроек
         $core = WPJAI_Core::get_instance();
         $settings = $core->get_settings();
 
@@ -61,13 +55,10 @@ class WPJAI_API {
             return '';
         }
 
-        // Получаем текущий ключ
         $key = $this->api_keys[$this->current_key_index];
 
-        // Увеличиваем индекс для следующего вызова
         $this->current_key_index = ($this->current_key_index + 1) % count($this->api_keys);
 
-        // Сохраняем новый индекс в опции WordPress для персистентности
         update_option($this->key_index_option, $this->current_key_index);
 
         return $key;
@@ -98,13 +89,13 @@ class WPJAI_API {
      * AJAX: Загрузка статей из JSON
      */
     public function ajax_fetch_json_articles() {
-        // Проверка nonce
+
         check_ajax_referer('wp_json_article_importer_nonce', 'nonce');
-        // Проверка прав доступа
+
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Недостаточно прав');
         }
-        // Получение JSON данных
+
         $json_data = '';
         $source_type = isset($_POST['source_type']) ? sanitize_text_field($_POST['source_type']) : 'url';
         if ($source_type === 'url') {
@@ -134,7 +125,6 @@ class WPJAI_API {
             wp_send_json_error('Неизвестный источник данных');
         }
 
-        // Декодирование JSON
         $data = json_decode($json_data, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -145,7 +135,6 @@ class WPJAI_API {
             wp_send_json_error('Неверный формат JSON: отсутствуют статьи');
         }
 
-        // Сохраняем статьи в сессии
         set_transient('wp_json_article_importer_articles', $data['articles'], 12 * HOUR_IN_SECONDS);
 
         wp_send_json_success(array(
@@ -158,7 +147,7 @@ class WPJAI_API {
      * AJAX: Получение статьи по индексу
      */
     public function ajax_get_article_by_index() {
-        // Проверка nonce
+
         check_ajax_referer('wp_json_article_importer_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
@@ -200,7 +189,6 @@ class WPJAI_API {
             wp_send_json_error('API ключи не настроены');
         }
 
-        // Формирование URL запроса
         $url = add_query_arg(
             array(
                 'query' => urlencode($query),
@@ -210,7 +198,6 @@ class WPJAI_API {
             'https://api.unsplash.com/search/photos'
         );
 
-        // Отправка запроса
         $response = wp_remote_get($url, array(
             'headers' => array(
                 'Accept-Version' => 'v1',
@@ -254,10 +241,10 @@ class WPJAI_API {
      * AJAX: Получение настроек плагина
      */
     public function ajax_get_plugin_settings() {
-        // Проверка nonce
+
         check_ajax_referer('wp_json_article_importer_nonce', 'nonce');
 
-        // Проверка прав доступа
+
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Недостаточно прав');
         }
@@ -272,15 +259,13 @@ class WPJAI_API {
      * AJAX: Сохранение настроек плагина
      */
     public function ajax_save_plugin_settings() {
-        // Проверка nonce
+
         check_ajax_referer('wp_json_article_importer_nonce', 'nonce');
 
-        // Проверка прав доступа
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Недостаточно прав');
         }
 
-        // Получение и валидация настроек
         $json_file_url = isset($_POST['json_file_url']) ? esc_url_raw($_POST['json_file_url']) : '';
         $api_keys = isset($_POST['api_keys']) ? sanitize_textarea_field($_POST['api_keys']) : '';
         $default_post_type = isset($_POST['default_post_type']) ? sanitize_text_field($_POST['default_post_type']) : 'page';
@@ -298,7 +283,6 @@ class WPJAI_API {
         $core = WPJAI_Core::get_instance();
         $core->update_settings($settings);
 
-        // Обновление массива ключей API
         if (!empty($api_keys)) {
             $this->api_keys = array_map('trim', explode(',', $api_keys));
         } else {
