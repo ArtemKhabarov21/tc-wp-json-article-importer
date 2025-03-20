@@ -295,6 +295,22 @@
             $('#keywords-tags').empty();
 
             if (article.thumbnail) {
+                // Если есть ключевые слова, обновляем alt-текст миниатюры
+                if (article.meta && article.meta.keywords) {
+                    let keywords = '';
+                    if (Array.isArray(article.meta.keywords)) {
+                        keywords = article.meta.keywords.join(', ');
+                    } else {
+                        keywords = article.meta.keywords;
+                    }
+
+                    if (keywords) {
+                        const firstKeyword = keywords.split(',')[0].trim();
+                        if (firstKeyword) {
+                            article.thumbnail.alt = firstKeyword;
+                        }
+                    }
+                }
                 WPJAI.Images.setThumbnail(article.thumbnail);
             } else {
                 WPJAI.Images.clearThumbnail();

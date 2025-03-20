@@ -1,24 +1,36 @@
 /**
  * Модуль для работы с изображениями Unsplash
+ * Полная версия с исправлениями
  */
 (function($) {
     'use strict';
 
-    // Создаем глобальный объект плагина, если он еще не существует
     window.WPJAI = window.WPJAI || {};
 
-    // Создаем модуль изображений в глобальном объекте WPJAI
     WPJAI.Images = {
-        // Хранение выбранной миниатюры
         selectedThumbnail: null,
 
-        // Инициализация модуля
         init: function() {
-            // Инициализация обработчиков событий
             this.initEventHandlers();
-        },
 
-        // Инициализация обработчиков событий
+            $('#meta-keywords').on('change', function() {
+                if (WPJAI.Images.selectedThumbnail) {
+                    const metaKeywords = $(this).val();
+                    if (metaKeywords) {
+                        const keywords = metaKeywords.split(',');
+                        if (keywords.length > 0) {
+                            const firstKeyword = keywords[0].trim();
+                            if (firstKeyword) {
+                                WPJAI.Images.selectedThumbnail.alt = firstKeyword;
+
+                                const previewHtml = `<img src="${WPJAI.Images.selectedThumbnail.url}" alt="${firstKeyword}" />`;
+                                $('#thumbnail-preview').html(previewHtml);
+                            }
+                        }
+                    }
+                }
+            });
+        },
         initEventHandlers: function() {
             // Поиск изображений в Unsplash
             $('#search-unsplash').on('click', function() {
@@ -87,7 +99,8 @@
             let html = '';
 
             $.each(images, function(index, image) {
-                const isThumbnail = WPJAI.Images.selectedThumbnail && WPJAI.Images.selectedThumbnail.id === image.id;
+                const isThumbnail = WPJAI.Images.selectedThumbnail &&
+                    WPJAI.Images.selectedThumbnail.id === image.id;
                 const thumbnailClass = isThumbnail ? 'is-thumbnail' : '';
 
                 html += `
@@ -134,45 +147,34 @@
             });
         },
 
-        // Инициализация действий с изображениями (вставка в текст и установка миниатюры)
-        // Обновление функции setThumbnail в модуле images.js
-
-// Установка выбранного изображения как миниатюры
+        // ГЛАВНОЕ ИСПРАВЛЕНИЕ: функция setThumbnail сохраняет только ссылку без загрузки
         setThumbnail: function(imageData) {
-            // Проверяем, загружено ли изображение в медиабиблиотеку
-            if (imageData.attachment_id) {
-                // Если ID вложения уже есть, просто используем его
-                WPJAI.Images.selectedThumbnail = imageData;
-                const previewHtml = `<img src="${imageData.url}" alt="${imageData.alt}" />`;
-                $('#thumbnail-preview').html(previewHtml);
-                $('#remove-thumbnail').show();
-                WPJAI.Utils.showNotice('success', 'Миниатюра установлена');
-            } else {
-                // Если ID вложения нет, загружаем изображение в медиабиблиотеку
-                WPJAI.Images.uploadToMediaLibrary(imageData.url, imageData.alt)
-                    .then(function(attachmentId) {
-                        // Получаем URL загруженного изображения
-                        return WPJAI.Images.getAttachmentUrl(attachmentId)
-                            .then(function(url) {
-                                // Сохраняем данные о выбранной миниатюре
-                                imageData.attachment_id = attachmentId;
-                                imageData.url = url; // Обновляем URL на локальный
-                                WPJAI.Images.selectedThumbnail = imageData;
 
-                                // Обновляем область предпросмотра миниатюры
-                                const previewHtml = `<img src="${url}" alt="${imageData.alt}" />`;
-                                $('#thumbnail-preview').html(previewHtml);
+            let firstKeyword = '';
+            const metaKeywords = $('#meta-keywords').val();
 
-                                // Показываем кнопку удаления миниатюры
-                                $('#remove-thumbnail').show();
-
-                                WPJAI.Utils.showNotice('success', 'Миниатюра установлена и загружена в медиабиблиотеку');
-                            });
-                    })
-                    .catch(function(error) {
-                        WPJAI.Utils.showNotice('error', 'Ошибка загрузки миниатюры: ' + error.message);
-                    });
+            if (metaKeywords) {
+                const keywords = metaKeywords.split(',');
+                if (keywords.length > 0) {
+                    firstKeyword = keywords[0].trim();
+                }
             }
+
+            if (firstKeyword) {
+                imageData.alt = firstKeyword;
+            }
+
+            WPJAI.Images.selectedThumbnail = imageData;
+
+            // Обновляем предпросмотр миниатюры
+            const previewHtml = `<img src="${imageData.url}" alt="${imageData.alt}" />`;
+            $('#thumbnail-preview').html(previewHtml);
+
+            // Показываем настройки миниатюры и кнопку удаления
+            $('#thumbnail-settings').show();
+            $('#remove-thumbnail').show();
+
+            WPJAI.Utils.showNotice('success', 'Миниатюра выбрана. Она будет загружена при публикации.');
         },
 
         initImageActions: function() {
@@ -191,6 +193,7 @@
                 const $item = $(this).closest('.image-item');
                 const $img = $item.find('img');
 
+                // Здесь просто создаем объект с данными без загрузки
                 const imageData = {
                     id: $img.data('id'),
                     url: $img.data('url'),
@@ -213,6 +216,7 @@
             $('#thumbnail-preview').html('<p class="no-thumbnail">Миниатюра не выбрана</p>');
 
             $('#remove-thumbnail').hide();
+            $('#thumbnail-settings').hide();
 
             $('.image-item').removeClass('is-thumbnail');
         },
@@ -282,6 +286,7 @@
             });
         },
 
+        // В этой функции обработку нужно модифицировать для процесса публикации
         processContentImages: async function(content) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = content;
@@ -300,7 +305,7 @@
                             const newSrc = await WPJAI.Images.getAttachmentUrl(uploadedId);
 
                             img.setAttribute('src', newSrc);
-                            img.setAttribute('data-id', uploadedId);
+                            img.setAttribute('data-attachment-id', uploadedId);
                             img.classList.add('wp-image-' + uploadedId);
                         }
                     } catch(error) {

@@ -68,7 +68,27 @@
                         <div id="keywords-tags" class="keywords-tags"></div>
 
                         <div id="unsplash-results" class="image-results"></div>
-
+                        <div class="selected-thumbnail">
+                            <h4>Миниатюра записи</h4>
+                            <div id="thumbnail-preview">
+                                <p class="no-thumbnail">Миниатюра не выбрана</p>
+                            </div>
+                            <div id="thumbnail-settings" style="margin-top: 10px;">
+                                <div class="thumbnail-dimensions">
+                                    <label>
+                                        <span>Ширина:</span>
+                                        <input type="number" id="thumbnail-width" value="1300" min="100" max="3000" step="10">
+                                    </label>
+                                    <span>×</span>
+                                    <label>
+                                        <span>Высота:</span>
+                                        <input type="number" id="thumbnail-height" value="800" min="100" max="3000" step="10">
+                                    </label>
+                                    <p class="description">Укажите желаемые размеры миниатюры. Изображение будет изменено при публикации.</p>
+                                </div>
+                            </div>
+                            <button id="remove-thumbnail" class="button button-secondary" style="display:none;">Удалить миниатюру</button>
+                        </div>
 
                         <div class="sidebar-publish-options">
                             <h3>Настройки публикации</h3>
@@ -76,17 +96,11 @@
                             <div class="option">
                                 <label for="post-type">Тип контента:</label>
                                 <select id="post-type">
-                                    <option value="page">Страница</option>
-                                    <option value="post">Запись</option>
+                                    <option value="page">Page</option>
+                                    <option value="post">Post</option>
                                 </select>
                             </div>
-                            <div class="selected-thumbnail">
-                                <h4>Миниатюра записи</h4>
-                                <div id="thumbnail-preview">
-                                    <p class="no-thumbnail">Миниатюра не выбрана</p>
-                                </div>
-                                <button id="remove-thumbnail" class="button button-secondary" style="display:none;">Удалить миниатюру</button>
-                            </div>
+
                             <div class="option post-category-option" style="display:none;">
                                 <label for="post-category">Категория:</label>
                                 <select id="post-category">

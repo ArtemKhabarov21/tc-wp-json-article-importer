@@ -82,7 +82,7 @@ class WPJAI_Core {
         $this->settings = get_option('wp_json_article_importer_settings', array(
             'json_file_url' => '',
             'api_keys' => 'VKikqorzQ57Wt305oVCfGvi-KIWFKfvo2cDW7-pPY_M',
-            'default_post_type' => 'page', // По умолчанию страницы, а не посты
+            'default_post_type' => 'post', // По умолчанию страницы, а не посты
         ));
     }
 
@@ -109,7 +109,7 @@ class WPJAI_Core {
             add_option('wp_json_article_importer_settings', array(
                 'json_file_url' => '',
                 'api_keys' =>  'KdfyxxKfkUFqNBcD2Oj-7VjN-WrGHjgeW73VBkhGam0',
-                'default_post_type' => 'page',
+                'default_post_type' => 'post',
             ));
         }
     }
