@@ -161,8 +161,8 @@
                     <div class="form-group">
                         <label for="default-post-type">Тип контента по умолчанию:</label>
                         <select id="default-post-type">
-                            <option value="page" <?php selected( isset($settings['default_post_type']) ? $settings['default_post_type'] : 'page', 'page' ); ?>>Страница</option>
-                            <option value="post" <?php selected( isset($settings['default_post_type']) ? $settings['default_post_type'] : 'page', 'post' ); ?>>Запись</option>
+                            <option value="page" <?php selected( isset($settings['default_post_type']) ? $settings['default_post_type'] : 'page', 'page' ); ?>>Page</option>
+                            <option value="post" <?php selected( isset($settings['default_post_type']) ? $settings['default_post_type'] : 'page', 'post' ); ?>>Post</option>
                         </select>
                         <p class="description">Выберите тип контента, который будет использоваться по умолчанию при импорте.</p>
                     </div>

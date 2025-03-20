@@ -3,7 +3,7 @@
  * Plugin Name: TC WP JSON Article Importer
  * Plugin URI:
  * Description: Импорт статей из JSON файла с добавлением изображений через Unsplash API
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Artem Khabarov
  * Author URI:
  * Text Domain: TC wp-json-article-importer
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 
 define('WPJAI_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WPJAI_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('WPJAI_VERSION', '1.0.0');
+define('WPJAI_VERSION', '1.0.1');
 
 spl_autoload_register(function ($class_name) {
     if (strpos($class_name, 'WPJAI_') !== 0) {

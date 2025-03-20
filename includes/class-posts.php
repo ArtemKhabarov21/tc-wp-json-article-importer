@@ -57,7 +57,8 @@ class WPJAI_Posts {
         $article = $articles[$article_index];
 
         try {
-            $content_with_images = $this->process_content_images($content_html);
+            $content_with_tables = $this->processTablesInContent($this->process_content_images($content_html));
+            $content_with_images = $this->process_content_images($content_with_tables);
 
             if ($thumbnail_id <= 0) {
                 $featured_image_id = $this->extract_first_image_id($content_with_images);
@@ -108,6 +109,24 @@ class WPJAI_Posts {
         } catch (Exception $e) {
             wp_send_json_error('Ошибка обработки статьи: ' . $e->getMessage());
         }
+    }
+
+    private function processTablesInContent($content) {
+        $content = preg_replace_callback('/<table>.*?<\/table>/is', function($matches) {
+            $tableContent = $matches[0];
+
+            if (strpos($tableContent, '<thead>') === false) {
+                $tableContent = preg_replace('/<table>/', '<!-- wp:table {"className":"is-style-stripes"} --><figure class="wp-block-table is-style-stripes"><table class="has-fixed-layout">', $tableContent);
+            } else {
+                $tableContent = preg_replace('/<table>/', '<!-- wp:table {"className":"is-style-stripes"} --><figure class="wp-block-table is-style-stripes"><table class="has-fixed-layout">', $tableContent);
+            }
+
+            $tableContent = preg_replace('/<\/table>/', '</table></figure><!-- /wp:table -->', $tableContent);
+
+            return $tableContent;
+        }, $content);
+
+        return $content;
     }
 
     /**
