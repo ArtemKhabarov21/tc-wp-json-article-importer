@@ -162,7 +162,6 @@
         },
 
         saveCurrentArticleData: function() {
-
             const currentIndex = WPJAI.data.currentArticleIndex;
 
             if (!WPJAI.data.loadedArticles || !WPJAI.data.loadedArticles[currentIndex]) {
@@ -220,6 +219,43 @@
             });
         },
 
+        /**
+         * Обработка ключевых слов из разных форматов в единый массив
+         */
+        processKeywords: function(keywordsData) {
+            let keywords = [];
+
+            if (!keywordsData) {
+                return keywords;
+            }
+
+            // Если keywordsData - массив
+            if (Array.isArray(keywordsData)) {
+                keywordsData.forEach(function(item) {
+                    if (typeof item === 'string') {
+                        // Разбиваем строку по запятым
+                        item.split(',').forEach(function(keyword) {
+                            const cleanKeyword = keyword.trim();
+                            if (cleanKeyword) {
+                                keywords.push(cleanKeyword);
+                            }
+                        });
+                    }
+                });
+            }
+            // Если keywordsData - строка
+            else if (typeof keywordsData === 'string') {
+                keywordsData.split(',').forEach(function(keyword) {
+                    const cleanKeyword = keyword.trim();
+                    if (cleanKeyword) {
+                        keywords.push(cleanKeyword);
+                    }
+                });
+            }
+
+            return keywords;
+        },
+
         displayArticle: function(article) {
             if (!article) {
                 $('.article-preview').html('<div class="no-article"><p>Статья не найдена</p></div>');
@@ -264,36 +300,43 @@
                 WPJAI.Images.clearThumbnail();
             }
 
+            // Обработка ключевых слов
             if (article.meta && article.meta.keywords) {
-                const keywords = Array.isArray(article.meta.keywords)
-                    ? article.meta.keywords
-                    : article.meta.keywords.split(',');
+                // Обрабатываем ключевые слова с помощью нашей новой функции
+                const keywords = WPJAI.Articles.processKeywords(article.meta.keywords);
 
                 if (keywords.length > 0) {
+                    // Создаем HTML для облака тегов
                     let keywordsHtml = '<div class="keywords-title">Ключевые слова для поиска:</div>';
                     keywordsHtml += '<div class="keywords-list">';
 
                     keywords.forEach(function(keyword) {
-                        const cleanKeyword = keyword.trim().replace(/,\s*$/, '');
-                        if (cleanKeyword) {
-                            keywordsHtml += `<span class="keyword-tag" data-keyword="${cleanKeyword}">${cleanKeyword}</span>`;
-                        }
+                        keywordsHtml += `<span class="keyword-tag" data-keyword="${keyword}">${keyword}</span>`;
                     });
 
                     keywordsHtml += '</div>';
                     $('#keywords-tags').html(keywordsHtml);
 
-                    const firstKeyword = keywords[0].trim().replace(/,\s*$/, '');
-                    if (firstKeyword) {
-                        $('#unsplash-search').val(firstKeyword);
-                        WPJAI.Images.searchUnsplash(firstKeyword);
+                    // Настраиваем поисковый запрос с первым ключевым словом
+                    if (keywords[0]) {
+                        $('#unsplash-search').val(keywords[0]);
+                        WPJAI.Images.searchUnsplash(keywords[0]);
                     }
 
+                    // Обработчик кликов на теги
                     $('.keyword-tag').on('click', function() {
                         const keyword = $(this).data('keyword');
                         $('#unsplash-search').val(keyword);
+
+                        // Удаляем класс active у всех тегов и добавляем текущему
+                        $('.keyword-tag').removeClass('active');
+                        $(this).addClass('active');
+
                         WPJAI.Images.searchUnsplash(keyword);
                     });
+
+                    // Устанавливаем первый тег как активный
+                    $('.keyword-tag').first().addClass('active');
                 }
             }
 

@@ -193,6 +193,7 @@ class WPJAI_API {
             array(
                 'query' => urlencode($query),
                 'per_page' => 20,
+                'orientation' => 'landscape',
                 'client_id' => $api_key,
             ),
             'https://api.unsplash.com/search/photos'

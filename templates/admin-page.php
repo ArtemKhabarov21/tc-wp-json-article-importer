@@ -30,32 +30,25 @@
 
                 <div class="preview-container" style="display:none;">
                     <div class="preview-panel">
-
+                        <div class="article-metadata">
+                        <div class="form-group">
+                            <label for="article-title"><strong>H1:</strong></label>
+                            <input type="text" id="article-title" class="regular-text" style="width: 100%;">
+                        </div>
+                        </div>
                         <div class="article-preview">
                             <div class="no-article">
                                 <p>Нажмите "Загрузить статьи из JSON" для начала работы.</p>
                             </div>
                         </div>
-                        <!-- Новые поля для SEO и заголовка -->
                         <div class="article-metadata">
-                            <div class="form-group">
-                                <label for="article-title"><strong>Заголовок (H1):</strong></label>
-                                <input type="text" id="article-title" class="regular-text" style="width: 100%;">
-                            </div>
                             <div class="form-group meta-fields">
-                                <label for="meta-title"><strong>SEO заголовок (title):</strong></label>
+                                <label for="meta-title"><strong>Meta title:</strong></label>
                                 <input type="text" id="meta-title" class="regular-text" style="width: 100%;">
-                                <p class="description">Рекомендуемая длина: до 60 символов</p>
                             </div>
                             <div class="form-group meta-fields">
-                                <label for="meta-description"><strong>META описание:</strong></label>
+                                <label for="meta-description"><strong>Meta depiction:</strong></label>
                                 <textarea id="meta-description" rows="3" style="width: 100%;"></textarea>
-                                <p class="description">Рекомендуемая длина: до 160 символов</p>
-                            </div>
-                            <div class="form-group meta-fields">
-                                <label for="meta-keywords"><strong>META ключевые слова:</strong></label>
-                                <input type="text" id="meta-keywords" class="regular-text" style="width: 100%;">
-                                <p class="description">Разделяйте ключевые слова запятыми</p>
                             </div>
                         </div>
                     </div>

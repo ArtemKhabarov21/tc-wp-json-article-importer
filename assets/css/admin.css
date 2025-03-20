@@ -53,8 +53,8 @@
 
 .article-preview {
     padding: 20px;
-    min-height: 600px;
-    max-height: 120vh;
+    min-height: 600px !important;
+    max-height: 90vh !important;
     overflow-y: auto;
 }
 
@@ -714,4 +714,160 @@
 
 .api-keys-status .error {
     color: #d63638;
+}
+
+/* Добавьте эти стили в файл assets/css/admin.css */
+
+.keywords-tags {
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+.keywords-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+.keywords-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.keyword-tag {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #444;
+}
+
+.keyword-tag:hover {
+    background-color: #e7f5fa;
+    border-color: #0073aa;
+    color: #0073aa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+}
+
+.keyword-tag.active {
+    background-color: #0073aa;
+    border-color: #0073aa;
+    color: #fff;
+}
+
+
+.article-title-container {
+    padding: 15px 20px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #e2e4e7;
+    margin-bottom: 0;
+}
+
+.article-title-container input[type="text"] {
+    font-size: 18px;
+    font-weight: 600;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.article-title-container input[type="text"]:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+    outline: none;
+}
+
+.preview-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 2;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 0;
+    position: relative;
+    min-height: 600px;
+}
+
+.article-preview {
+    padding: 20px;
+    flex: 1;
+    min-height: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.article-metadata {
+    padding: 15px 20px;
+    background: #f9f9f9;
+    border-top: 1px solid #e2e4e7;
+    margin-top: 0;
+}
+
+.mce-toolbar .mce-btn button {
+    padding: 2px 3px;
+}
+
+/* Дополнительные стили для более WordPress-подобного внешнего вида заголовка */
+
+.article-title-container {
+    background-color: #fff;  /* Белый фон как в WordPress */
+    padding: 15px 20px 10px;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.article-title-container label {
+    margin-bottom: 8px;
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    color: #23282d;
+}
+
+.article-title-container input[type="text"] {
+    font-size: 20px;
+    height: auto;
+    padding: 8px 12px;
+    width: 100%;
+    font-weight: normal;
+    border: 1px solid #ddd;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07) inset;
+    color: #32373c;
+    box-sizing: border-box;
+}
+
+.wp-editor-container {
+    border: 1px solid #e2e4e7;
+    border-radius: 0 0 4px 4px;
+}
+
+.mce-toolbar {
+    padding: 2px;
+}
+
+.preview-container {
+    display: flex;
+    margin: 20px 0;
+    gap: 20px;
+}
+
+.article-title-container input[type="text"]:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+    outline: 2px solid transparent;
+}
+
+.article-title-container input[type="text"] {
+    transition: all 0.3s ease;
+}
+
+.article-title-container input[type="text"]:hover:not(:focus) {
+    border-color: #999;
 }

@@ -52,6 +52,7 @@
                     toolbar2: 'fullscreen,pastetext,forecolor,backcolor,hr,removeformat,charmap,outdent,indent,undo,redo,wp_help',
                     relative_urls: false,
                     convert_urls: false,
+                    height: 800,
                     setup: function(editor) {
                         // Обработчик для перетаскивания изображений
                         editor.on('drop', function(e) {
